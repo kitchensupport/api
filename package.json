@@ -18,9 +18,11 @@
     "url": "https://github.com/kitchensupport/api.git"
   },
   "dependencies": {
-    "express": "*",
+    "express": "*"
+  },
+  "devDependencies": {
     "browserify": "*",
-    "gulp-ruby-sass": "*",
+    "gulp-sass": "*",
     "gulp-autoprefixer": "*",
     "gulp-minify-css": "*",
     "gulp-jshint": "*",
@@ -29,5 +31,6 @@
     "gulp-rename": "*",
     "del": "*"
   },
-  "private": true
+  "private": true,
+  "subdomain": "api"
 }
