@@ -1,0 +1,33 @@
+{
+  "name": "api.kitchen.support",
+  "version": "0.0.1",
+  "description": "Kitchen Support's RESTful API backend.",
+  "author": "Garrick Buckley <gbuckle@purdue.edu>",
+  "contributors": [
+    {
+      "name": "Garrick Buckley",
+      "email": "gbuckle@purdue.edu"
+    },
+    {
+      "name": "Jack Horton",
+      "email": "horton7@purdue.edu"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kitchensupport/api.git"
+  },
+  "dependencies": {
+    "express": "*",
+    "browserify": "*",
+    "gulp-ruby-sass": "*",
+    "gulp-autoprefixer": "*",
+    "gulp-minify-css": "*",
+    "gulp-jshint": "*",
+    "gulp-uglify": "*",
+    "gulp-concat": "*",
+    "gulp-rename": "*",
+    "del": "*"
+  },
+  "private": true
+}
