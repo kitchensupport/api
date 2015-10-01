@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://garrickb@github.com/garrickb/api.git"
+    "url": "https://github.com/kitchensupport/api.git"
   },
   "author": "Garrick Buckley <gbuckle@purdue.edu>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/garrickb/api/issues"
+    "url": "https://github.com/kitchensupport/api/issues"
   },
-  "homepage": "https://github.com/garrickb/api#readme",
+  "homepage": "https://github.com/kitchensupport/api#readme",
   "dependencies": {
     "express": "^4.13.3"
   },
