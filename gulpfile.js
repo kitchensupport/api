@@ -18,13 +18,12 @@ gulp.task('lint', () => {
 // TODO: this task is awkward and i dont like it. Fix it, eventually
 gulp.task('watch', () => {
     const server = new forever.Monitor('./index.js');
-    const restart = function () {
-        server.stop().start();
-    };
 
     server.start();
 
-    gulp.watch(globs, ['lint'], restart);
+    gulp.watch(globs, ['lint'], () => {
+        server.stop().start();
+    });
 });
 
 gulp.task('run', ['lint', 'watch']);
