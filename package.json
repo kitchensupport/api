@@ -4,6 +4,7 @@
   "description": "Kitchen Support's RESTful API backend.",
   "main": "index.js",
   "scripts": {
+    "test": "gulp lint",
     "start": "gulp run"
   },
   "engines": {
