@@ -8,6 +8,8 @@ const forever = require('forever-monitor');
 
 const globs = ['src/**/*.js', 'server.js', 'gulpfile.js'];
 
+process.env.NODE_ENV = 'development';
+
 gulp.task('lint', () => {
     return gulp.src(globs)
         .pipe(eslint())
