@@ -2,6 +2,6 @@
 
 import {bookshelf} from './src/utils/database';
 
-export let User = bookshelf.Model.extend({
+export const Log = bookshelf.Model.extend({
     tableName: 'logs'
 });
