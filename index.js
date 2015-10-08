@@ -18,7 +18,7 @@ if (cluster.isMaster && production) {
     }
 
     cluster.on('online', (worker) => {
-        console.log(`START: worker ${worker.id} (process ${worker.process.pid}) is online on port ${port}`);
+        console.log(`LOG: worker ${worker.id} (process ${worker.process.pid}) is online on port ${port}`);
     });
 
     cluster.on('exit', (worker, code, signal) => {
