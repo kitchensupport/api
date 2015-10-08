@@ -2,11 +2,7 @@ import knex from 'knex';
 import bs from 'bookshelf';
 import db from '../../config/database.js';
 
-export let bookshelf;
-
-export function instantiateDatabase() {
-    console.log(`Connecting to database: ${db.user}:${db.password}@${db.host}:${db.port}/${db.database}`);
-    bookshelf = bs(
+const bookshelf = bs(
             knex({
                 client: 'pg',
                 connection: {
@@ -20,13 +16,5 @@ export function instantiateDatabase() {
                 }
             })
         );
-    return bookshelf;
-};
 
-export default function getDatabase() {
-    if (bookshelf) {
-        return bookshelf;
-    } else {
-        return instantiateDatabase();
-    }
-};
+export default bookshelf;
