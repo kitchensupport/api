@@ -57,8 +57,6 @@ router.post('/accounts/create/basic', (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    console.log(`Request: ${email}, ${password}, ${JSON.stringify(req.body)}`);
-
     createUser(email, password).then((user) => {
         res.status(200);
         res.send({
@@ -111,7 +109,9 @@ router.post('/accounts/create/facebook/:facebook_token', (req, res) => {
 });
 
 router.post('/accounts/login/basic', (req, res) => {
-    const {email, password} = req.body;
+    const email = req.body.email;
+    const password = req.body.password;
+
     const hashedPassword = User.hashPassword(password);
 
     User.where({email, password: hashedPassword}).fetch().then((user) => {
