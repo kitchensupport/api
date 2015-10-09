@@ -10,7 +10,7 @@ bookshelf.knex.schema.hasTable('logs').then((exists) => {
             log.string('requested');
             log.dateTime('date').defaultTo(bookshelf.knex.raw('now()'));
         }).then(() => {
-            console.log(`'logs' table created successfully.`);
+            console.log('\'logs\' table created successfully.');
         });
     }
 });
