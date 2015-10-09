@@ -1,5 +1,12 @@
-import defaultMessage from '../utils/index';
+import Logs from '../collections/logs';
+import errorMessage from '../utils/error';
 
 export default function(req, res) {
-    res.send(defaultMessage());
+  new Logs().fetch().then((log) => {
+      console.log(`log: ${log}`);
+      res.send(log);
+  }).catch((err) => {
+      console.log(`Error fetching logs: '${err}'.`);
+      res.send(errorMessage());
+  });
 };

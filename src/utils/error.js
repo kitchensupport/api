@@ -1,5 +1,5 @@
 export default function() {
     return {
-        message: 'hi again'
+      message: 'Oops, there was an error!'
     };
 };
