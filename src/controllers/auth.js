@@ -1,5 +1,5 @@
 import express from 'express';
-import uuid from 'uuid';
+import uuid from 'node-uuid';
 import request from 'request';
 import User from '../models/user';
 
