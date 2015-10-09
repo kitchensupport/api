@@ -15,12 +15,13 @@ export function routes() {
 
 /**
  * a helper function to create a new user
- * @param {Object} fields - an object containing an email and either a password or a facebook access token
- * @return {Promise} - a native ES6 promise that resolves on successful user creation and rejects otherwise
+ * @param  {String} email         Email address of the user to create.
+ * @param  {String} password      Password of the user to create.
+ * @param  {String} facebookToken Facebook token of the user to create.
+ * @return {Promise}               a native ES6 promise that resolves on successful user creation and rejects otherwise
  */
 function createUser(email, password, facebookToken) {
     return new Promise((resolve, reject) => {
-        //const {email, password, facebookToken} = fields;
         const token = uuid.v4();
 
         // we want a password xor facebookToken, not both, not neither
