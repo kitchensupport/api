@@ -1,20 +1,11 @@
 import express from 'express';
 import logger from './src/middleware/logger';
-import authorize from './src/middleware/auth';
-import indexController from './src/controllers/index';
-import authController from './src/controllers/auth';
+import loggingController from './src/controllers/logging';
 
 const app = express();
 
-// normal middleware
-app.use(logger('hi'));
+app.use(logger());
 
-// controllers
-app.use(authController());
-
-// tests
-// TODO: get rid of these, eventually
-app.get('/', indexController);
-app.get('/protected', authorize());
+app.get('/', loggingController);
 
 export default app;
