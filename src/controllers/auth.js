@@ -50,7 +50,7 @@ function createUser(fields) {
     });
 }
 
-/********** route initialization **********/
+/* ********* route initialization ********* */
 
 router.post('/accounts/create/basic', (req, res) => {
     const {email, password} = req.body;
@@ -72,11 +72,10 @@ router.post('/accounts/create/basic', (req, res) => {
 
 router.post('/accounts/create/facebook/:facebook_token', (req, res) => {
     const facebookToken = req.params.facebook_token;
-    const query = qs.stringify();
 
     // hit facebook's api to make sure the token is valid, and get the user's email
     request({
-        url: `https://graph.facebook.com/me?${query}`,
+        url: 'https://graph.facebook.com/me',
         qs: {
             access_token: facebookToken,
             fields: 'email'

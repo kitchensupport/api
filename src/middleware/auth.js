@@ -1,9 +1,4 @@
-import express from 'express';
-import uuid from 'uuid';
-import request from 'request';
 import User from '../models/user';
-
-const router = express();
 
 /**
  * a middleware for ensuring a valid token is included with the attaching route
