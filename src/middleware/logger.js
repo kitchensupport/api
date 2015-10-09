@@ -6,10 +6,10 @@ export default () => {
             ip: req.ip,
             method: req.method,
             requested: `${req.protocol}://${req.hostname}${req.path}`
-        }).save().catch((err) => {
-            console.log(`Error in middleware/logger.js: ${err}`);
+        }).save().then(() => {
             next();
-        }).then(() => {
+        }).catch((err) => {
+            console.log(`Error in 'middleware/logger.js': ${err}`);
             next();
         });
     };
