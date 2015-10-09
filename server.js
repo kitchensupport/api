@@ -1,11 +1,11 @@
 import express from 'express';
 import logger from './src/middleware/logger';
-import indexController from './src/controllers/index';
+import loggingController from './src/controllers/logging';
 
 const app = express();
 
-app.use(logger('hi'));
+app.use(logger());
 
-app.get('/', indexController);
+app.get('/', loggingController);
 
 export default app;
