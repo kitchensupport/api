@@ -1,5 +1,5 @@
 import express from 'express';
-import uuid from 'uuid';
+import uuid from 'node-uuid';
 import request from 'request';
 import User from '../models/user';
 
@@ -15,12 +15,13 @@ export function routes() {
 
 /**
  * a helper function to create a new user
- * @param {Object} fields - an object containing an email and either a password or a facebook access token
- * @return {Promise} - a native ES6 promise that resolves on successful user creation and rejects otherwise
+ * @param  {String} email         Email address of the user to create.
+ * @param  {String} password      Password of the user to create.
+ * @param  {String} facebookToken Facebook token of the user to create.
+ * @return {Promise}               a native ES6 promise that resolves on successful user creation and rejects otherwise
  */
-function createUser(fields) {
+function createUser(email, password, facebookToken) {
     return new Promise((resolve, reject) => {
-        const {email, password, facebookToken} = fields;
         const token = uuid.v4();
 
         // we want a password xor facebookToken, not both, not neither
@@ -41,7 +42,7 @@ function createUser(fields) {
         }
 
         new User({email, password, facebookToken, token})
-            .save({method: 'insert'})
+            .save()
             .then((user) => {
                 resolve(user);
             }).catch((error) => {
@@ -53,19 +54,20 @@ function createUser(fields) {
 /* ********* route initialization ********* */
 
 router.post('/accounts/create/basic', (req, res) => {
-    const {email, password} = req.body;
+    const email = req.body.email;
+    const password = req.body.password;
 
-    createUser({email, password}).then((user) => {
+    createUser(email, password).then((user) => {
         res.status(200);
         res.send({
             status: 'success',
             token: user.token
         });
-    }).fail(() => {
+    }).catch((err) => {
         res.status(401);
         res.send({
             status: 'failure',
-            message: 'Invalid username or password'
+            message: `Invalid email or password: '${err}'.`
         });
     });
 });
@@ -107,7 +109,9 @@ router.post('/accounts/create/facebook/:facebook_token', (req, res) => {
 });
 
 router.post('/accounts/login/basic', (req, res) => {
-    const {email, password} = req.body;
+    const email = req.body.email;
+    const password = req.body.password;
+
     const hashedPassword = User.hashPassword(password);
 
     User.where({email, password: hashedPassword}).fetch().then((user) => {

@@ -1,18 +1,12 @@
 import bookshelf from '../utils/database';
+import model from '../utils/model';
 
-bookshelf.knex.schema.hasTable('logs').then((exists) => {
-    if (!exists) {
-        console.log(`Creating 'logs' table.`);
-        bookshelf.knex.schema.createTable('logs', (log) => {
-            log.increments('id').primary();
-            log.string('ip');
-            log.string('method');
-            log.string('requested');
-            log.dateTime('date').defaultTo(bookshelf.knex.raw('now()'));
-        }).then(() => {
-            console.log('\'logs\' table created successfully.');
-        });
-    }
+model('logs', (schema) => {
+    schema.increments('id').primary();
+    schema.string('ip');
+    schema.string('method');
+    schema.string('requested');
+    schema.dateTime('date').defaultTo(bookshelf.knex.raw('now()'));
 });
 
 export default bookshelf.Model.extend({
