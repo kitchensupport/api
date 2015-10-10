@@ -53,6 +53,22 @@ function createUser(email, password, facebookToken) {
 
 /* ********* route initialization ********* */
 
+router.get('/accounts', (req, res) => {
+    User.fetchAll().then((users) => {
+        res.send(users);
+    }).catch((error) => {
+        res.send(error);
+    });
+});
+
+router.get('/accounts/:id', (req, res) => {
+    new User({id: req.params.id}).fetch().then((user) => {
+        res.send(user);
+    }).catch((error) => {
+        res.send(error);
+    });
+});
+
 router.post('/accounts/create/basic', (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
@@ -61,13 +77,13 @@ router.post('/accounts/create/basic', (req, res) => {
         res.status(200);
         res.send({
             status: 'success',
-            token: user.token
+            token: user.attributes.token
         });
-    }).catch((err) => {
+    }).catch(() => {
         res.status(401);
         res.send({
             status: 'failure',
-            message: `Invalid email or password: '${err}'.`
+            message: 'Invalid username or password'
         });
     });
 });

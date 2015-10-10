@@ -16,6 +16,18 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(authRouter());
 
 app.get('/', loggingController);
-app.get('/protected', authorize());
+app.get('/protected', authorize(), (req, res) => {
+    res.status(200);
+    res.send(req.user);
+});
+
+app.use((err, req, res, next) => {
+    res.status(500);
+    res.send({
+        status: 'failure',
+        message: 'Internal server failure'
+    });
+    next(err);
+});
 
 export default app;
