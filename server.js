@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import cors from './src/middleware/cors';
+import cors from 'cors';
 import logger from './src/middleware/logger';
 import {authorize} from './src/middleware/auth';
 import loggingController from './src/controllers/logging';
