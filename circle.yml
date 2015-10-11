@@ -1,6 +1,11 @@
 machine:
     node:
         version: 4.1.1
+dependencies:
+    pre:
+        - sudo apt-get install build-essential
+        - sudo apt-get install gcc
+        - sudo apt-get install g++
 deployment:
     production:
         branch: master
