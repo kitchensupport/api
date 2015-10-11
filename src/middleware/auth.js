@@ -14,7 +14,7 @@ export function authorize() {
         }
 
         User.Model.where('token', token).fetch().then((user) => {
-            req.user = user.attributes;
+            req.user = user.omit('password');
             next();
         }).catch((error) => {
             next(error);
