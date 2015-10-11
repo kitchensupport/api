@@ -13,7 +13,7 @@ export function authorize() {
             return next(new Error('Unauthorized'));
         }
 
-        User.where('token', token).fetch().then((user) => {
+        User.Model.where('token', token).fetch().then((user) => {
             req.user = user.attributes;
             next();
         }).catch((error) => {

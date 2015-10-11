@@ -22,11 +22,13 @@ app.get('/protected', authorize(), (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    res.status(500);
-    res.send({
-        status: 'failure',
-        message: 'Internal server failure'
-    });
+
+    // res.status(500);
+    // res.send({
+    //     status: 'failure',
+    //     message: 'Internal server failure'
+    // });
+    console.log(err);
     next(err);
 });
 

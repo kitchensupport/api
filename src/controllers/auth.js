@@ -13,16 +13,18 @@ export function routes() {
     return router;
 };
 
+/* ***************** helpers ******************* */
+
 /**
  * a helper function to create a new user
- * @param  {String} email         Email address of the user to create.
- * @param  {String} password      Password of the user to create.
- * @param  {String} facebookToken Facebook token of the user to create.
- * @return {Promise}               a native ES6 promise that resolves on successful user creation and rejects otherwise
+ * @param  {Object} attrs - an object containing an email and either a facebook token or a password
+ * @return {Promise} - a native ES6 promise that resolves on successful user creation and rejects otherwise
  */
-function createUser(email, password, facebookToken) {
+export function createUser(attrs) {
+    const {email, password, facebookToken} = attrs;
+    const token = uuid.v4();
+
     return new Promise((resolve, reject) => {
-        const token = uuid.v4();
 
         // we want a password xor facebookToken, not both, not neither
         if (!(password || facebookToken) || (password && facebookToken)) {
@@ -41,124 +43,153 @@ function createUser(email, password, facebookToken) {
             return;
         }
 
-        new User({email, password, facebookToken, token})
+        new User.Model({email, password, facebook_token: facebookToken, token})
             .save()
             .then((user) => {
-                resolve(user);
-            }).catch((error) => {
-                reject(error);
-            });
+                resolve(user.omit('password'));
+            }).catch(reject);
     });
-}
+};
+
+export function getAttributes(attrs, fetch) {
+    return new Promise((resolve, reject) => {
+        if (attrs.email && attrs.password) {
+            User.hashPassword(attrs.password)
+                .then((hash) => {
+                    resolve({email: attrs.email, password: hash});
+                }).catch((error) => {
+                    reject(error);
+                });
+
+            return;
+        } else if (attrs.facebook_token && fetch) {
+            request({
+                url: 'https://graph.facebook.com/me',
+                qs: {
+                    access_token: attrs.facebook_token,
+                    fields: 'email'
+                },
+                json: true
+            }, (error, response) => {
+                if (error) {
+                    return reject(new Error('Facebook access error'));
+                }
+
+                return resolve({email: response.email, facebook_token: attrs.facebook_token});
+            });
+        } else if (attrs.facebook_token) {
+            process.nextTick(() => {
+                resolve({facebook_token: attrs.facebook_token});
+            });
+
+            return;
+        } else {
+            process.nextTick(() => {
+                reject(new Error('A username and password must be provided'));
+            });
+
+            return;
+        }
+    });
+};
+
+export function getUser(attrs) {
+    return new Promise((resolve, reject) => {
+        User.Model.where(attrs)
+            .fetch()
+            .then((user) => {
+                resolve(user.omit('password'));
+            })
+            .catch(reject);
+    });
+};
+
+export function logUserIn(attrs) {
+    const {email, password, facebookToken} = attrs;
+
+    return new Promise((resolve, reject) => {
+        if (!(password || facebookToken) || (password && facebookToken)) {
+            process.nextTick(() => {
+                reject(new Error('A password or facebook token must be provided'));
+            });
+
+            return;
+        }
+
+        if (password) {
+            User.hashPassword(password)
+                .then((hash) => {
+                    return User.Model.where({email, password: hash}).fetch();
+                }).then((user) => {
+                    resolve(user.omit('password'));
+                })
+                .catch(reject);
+        } else {
+            User.Model.where({facebook_token: facebookToken})
+                .fetch()
+                .then((user) => {
+                    resolve(user.omit('password'));
+                })
+                .catch(reject);
+        }
+    });
+};
 
 /* ********* route initialization ********* */
 
-router.get('/accounts', (req, res) => {
-    User.fetchAll().then((users) => {
-        res.send(users);
-    }).catch((error) => {
-        res.send(error);
-    });
-});
-
-router.get('/accounts/:id', (req, res) => {
-    new User({id: req.params.id}).fetch().then((user) => {
-        res.send(user);
-    }).catch((error) => {
-        res.send(error);
-    });
-});
-
-router.post('/accounts/create/basic', (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-
-    createUser(email, password).then((user) => {
-        res.status(200);
-        res.send({
-            status: 'success',
-            token: user.attributes.token
-        });
-    }).catch(() => {
-        res.status(401);
-        res.send({
-            status: 'failure',
-            message: 'Invalid username or password'
-        });
-    });
-});
-
-router.post('/accounts/create/facebook/:facebook_token', (req, res) => {
-    const facebookToken = req.params.facebook_token;
-
-    // hit facebook's api to make sure the token is valid, and get the user's email
-    request({
-        url: 'https://graph.facebook.com/me',
-        qs: {
-            access_token: facebookToken,
-            fields: 'email'
-        },
-        json: true
-    }, (facebookError, response) => {
-        if (facebookError) {
-            res.status(401);
-            return res.send({
-                status: 'failure',
-                error: facebookError
-            });
-        }
-
-        createUser({email: response.email, facebookToken}).then((user) => {
+router.post('/accounts/create', (req, res) => {
+    getAttributes(req.body, true)
+        .then((attrs) => {
+            return createUser(attrs, true);
+        }).then((user) => {
             res.status(200);
             res.send({
                 status: 'success',
-                token: user.token
+                user
             });
-        }).fail((createUserError) => {
+        }).catch((error) => {
+            console.log(error);
+            res.status(400);
+            res.send({
+                status: 'failure',
+                error: 'Unable to create account'
+            });
+        });
+});
+
+router.post('/accounts/login', (req, res) => {
+    getAttributes(req.body)
+        .then(logUserIn)
+        .then((user) => {
+            res.status(200);
+            res.send({
+                status: 'success',
+                user
+            });
+        }).catch(() => {
+            res.status(400);
+            res.send({
+                status: 'failure',
+                error: 'Invalid username or password'
+            });
+        });
+});
+
+router.get('/account', (req, res, next) => {
+    getUser({token: req.query.token})
+        .then((user) => {
+            res.status(200);
+            res.send({
+                status: 'success',
+                user
+            });
+        }).catch((error) => {
             res.status(401);
             res.send({
                 status: 'failure',
-                error: createUserError
+                error: 'No user associated with that token'
             });
-        });
-    });
-});
 
-router.post('/accounts/login/basic', (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-
-    const hashedPassword = User.hashPassword(password);
-
-    User.where({email, password: hashedPassword}).fetch().then((user) => {
-        res.status(200);
-        res.send({
-            status: 'success',
-            token: user.token
+            next(error);
         });
-    }).catch(() => {
-        res.status(401);
-        res.send({
-            status: 'failure',
-            error: 'Invalid username or password'
-        });
-    });
-});
-
-router.post('/accounts/login/facebook/:facebookToken', (req, res) => {
-    const facebookToken = req.params.facebookToken;
-
-    User.where('facebook_token', facebookToken).fetch().then((user) => {
-        res.status(200);
-        res.send({
-            status: 'success',
-            token: user.token
-        });
-    }).catch(() => {
-        res.status(401);
-        res.send({
-            status: 'failure',
-            error: 'Account does not exist'
-        });
-    });
 });
