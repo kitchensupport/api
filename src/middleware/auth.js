@@ -1,5 +1,4 @@
 import User from '../models/user';
-import errorMessage from '../utils/error';
 
 /**
  * a middleware for ensuring a valid token is included with the attaching route
@@ -11,12 +10,11 @@ export function authorize() {
 
         if (!token) {
 
-            // return next(new Error('Unauthorized'));
-            return next(JSON.stringify(errorMessage()));
+            return next(new Error('Unauthorized'));
         }
 
-        User.where('token', token).fetch().then((user) => {
-            req.user = user;
+        User.Model.where('token', token).fetch().then((user) => {
+            req.user = user.omit('password');
             next();
         }).catch((error) => {
             next(error);
