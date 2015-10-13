@@ -43,10 +43,15 @@ export function createUser(attrs) {
             return;
         }
 
-        new User.Model({email, password, facebook_token: facebookToken, token})
-            .save()
-            .then((user) => {
-                resolve(user.omit('password'));
+        User.hashPassword(password)
+            .then((hash) => {
+                return new User.Model({email, password: hash, facebook_token: facebookToken, token}).save();
+            }).then((user) => {
+                if (user) {
+                    resolve(user.omit('password'));
+                } else {
+                    reject(new Error('The user could not be saved'));
+                }
             }).catch(reject);
     });
 };
@@ -54,12 +59,9 @@ export function createUser(attrs) {
 export function getAttributes(attrs, fetch) {
     return new Promise((resolve, reject) => {
         if (attrs.email && attrs.password) {
-            User.hashPassword(attrs.password)
-                .then((hash) => {
-                    resolve({email: attrs.email, password: hash});
-                }).catch((error) => {
-                    reject(error);
-                });
+            process.nextTick(() => {
+                resolve({email: attrs.email, password: attrs.password});
+            });
 
             return;
         } else if (attrs.facebook_token && fetch) {
@@ -117,10 +119,16 @@ export function logUserIn(attrs) {
         }
 
         if (password) {
-            User.hashPassword(password)
-                .then((hash) => {
-                    return User.Model.where({email, password: hash}).fetch();
-                }).then((user) => {
+            User.Model.where({email})
+                .fetch()
+                .then((user) => {
+                    if (user) {
+                        return user.checkPassword(password);
+                    } else {
+                        return reject(new Error('No user found with that email'));
+                    }
+                })
+                .then((user) => {
                     resolve(user.omit('password'));
                 })
                 .catch(reject);
@@ -166,7 +174,8 @@ router.post('/accounts/login', (req, res) => {
                 status: 'success',
                 user
             });
-        }).catch(() => {
+        }).catch((error) => {
+            console.error(error);
             res.status(400);
             res.send({
                 status: 'failure',

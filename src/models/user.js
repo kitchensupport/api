@@ -16,7 +16,7 @@ const Model = bookshelf.Model.extend({
 
     checkPassword(password) {
         return new Promise((resolve, reject) => {
-            bcrypt.compare(password, this.password, (error, result) => {
+            bcrypt.compare(password, this.attributes.password, (error, result) => {
                 if (error || !result) {
                     return reject(new Error('Passwords do not match'));
                 } else {
