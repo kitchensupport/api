@@ -46,7 +46,6 @@
         "no-shadow": 2,
         "no-with": 2,
         "strict": [2, "global"],
-        "valid-jsdoc": 2,
         "vars-on-top": 2,
         "wrap-iife": 2,
 
@@ -76,7 +75,6 @@
         "one-var": [2, "never"],
         "quote-props": [2, "as-needed", {"keywords": true}],
         "quotes": [2, "single"],
-        "require-jsdoc": 1,
         "semi-spacing": [2, {"before": false, "after": false}],
         "semi": [2, "always"],
         "space-after-keywords": [2, "always"],
