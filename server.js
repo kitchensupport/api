@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import logger from './src/middleware/logger';
+import morgan from 'morgan';
 import {authorize} from './src/middleware/auth';
 import loggingController from './src/controllers/logging';
 import {routes as authRouter} from './src/controllers/auth';
@@ -10,7 +10,7 @@ const app = express();
 
 // middleware
 app.use(cors());
-app.use(logger());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'short' : 'dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -24,12 +24,6 @@ app.get('/protected', authorize(), (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-
-    // res.status(500);
-    // res.send({
-    //     status: 'failure',
-    //     message: 'Internal server failure'
-    // });
     console.log(err);
     next(err);
 });
