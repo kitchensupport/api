@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import {authorize} from './src/middleware/auth';
 import {routes as authRouter} from './src/controllers/auth';
+import {routes as recipeRouter} from './src/controllers/recipe';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 // controllers
 app.use(authRouter());
+app.use(recipeRouter());
 
 app.get('/protected', authorize(), (req, res) => {
     res.status(200);
