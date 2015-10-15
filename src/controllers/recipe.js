@@ -16,17 +16,16 @@ export function routes() {
     return router;
 };
 
-router.get('/recipe/featured', (req, res) => {
+router.get('/recipes/featured', (req, res) => {
     request({uri: yummlyBaseUrl,
         timeout: 15000,
         followRedirect: true,
-        maxRedirects: 10
+        maxRedirects: 10,
+        json: true
     }, (error, response, body) => {
         if (!error && response.statusCode === 200) {
-            const data = JSON.parse(body);
-
             res.status(200);
-            res.send({status: 'success', data});
+            res.send({status: 'success', data: body});
         } else {
             console.log(error);
             res.status(400);
@@ -38,17 +37,16 @@ router.get('/recipe/featured', (req, res) => {
     });
 });
 
-router.get('/recipe/search/:searchTerm', (req, res) => {
+router.get('/recipes/search/:searchTerm', (req, res) => {
     request({uri: `${yummlyBaseUrl}&q=${req.params.searchTerm}`,
         timeout: 15000,
         followRedirect: true,
-        maxRedirects: 10
+        maxRedirects: 10,
+        json: true
     }, (error, response, body) => {
         if (!error && response.statusCode === 200) {
-            const data = JSON.parse(body);
-
             res.status(200);
-            res.send({status: 'success', data});
+            res.send({status: 'success', data: body});
         } else {
             console.log(error);
             res.status(400);
