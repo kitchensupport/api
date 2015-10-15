@@ -23,10 +23,10 @@ router.get('/recipe/featured', (req, res) => {
         maxRedirects: 10
     }, (error, response, body) => {
         if (!error && response.statusCode === 200) {
-            const bodyJson = JSON.parse(body);
+            const data = JSON.parse(body);
 
             res.status(200);
-            res.send({status: 'success', bodyJson});
+            res.send({status: 'success', data});
         } else {
             console.log(error);
             res.status(400);
