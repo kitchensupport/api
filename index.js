@@ -12,7 +12,7 @@ const cores = os.cpus().length;
 const port = process.env.PORT || 8000;
 const production = process.env.NODE_ENV === 'production';
 
-if (cluster.isMaster && production) {
+if (cluster.isMaster && false) {
     for (let i = 0; i < cores; i++) {
         cluster.fork();
     }
