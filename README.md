@@ -9,17 +9,19 @@ Every request except for initial login and account creation requests will need t
 ## API Reference
 ### Accounts
 #### The account object
-All requests relating to accounts will have a response in this form.
+All requests relating to accounts will have a response in this form unless otherwise noted.
 
 ```json
 {
-    "user": {
-        "id": 1,
-        "email": "user@example.com",
-        "token": "5478a2d9-0a18-48f6-8f8c82fb3cc3",
-        "created": 1386247539
-    },
-    "status": "success"
+  "status": "success",
+  "user": {
+    "id": 1,
+    "email": "jackpeterhorton@gmail.com",
+    "facebook_token": null,
+    "api_token": "35531950-8156-4c51",
+    "created_at": "2015-10-17T00:52:32.665Z",
+    "updated_at": "2015-10-17T00:52:32.665Z"
+  }
 }
 ```
 
@@ -57,3 +59,30 @@ GET https://api.kitchen.support/account
 
 **Arguments**
 - `token`: A valid API token corresponding to tha account being requested.
+
+#### Request a password reset token
+**Definition**
+```
+POST http://api.kitchen.support/accounts/reset/request
+```
+
+**Arguments**
+- `email`: the email address of the user requesting a password reset. An email is sent to the user containing instructions on how to update their password.
+
+**Return**
+- *Success*: a 200 status code
+- *Failure*: a 401 status code if the email was invalid, or a 500 status code if the email was unable to send.
+
+#### Confirm a password reset
+**Definition**
+```
+POST http://api.kitchen.support/accounts/reset/confirm
+```
+
+**Arguments**
+- `reset_token`: The reset token that was emailed to the user. Must be less than 30 minutes old.
+- `password`: The new password to be set for the user.
+
+**Return**
+- *Success*: a 200 status code
+- *Failure*: a 401 status code if the email or reset token was invalid, or a 500 status code for other internal errors.

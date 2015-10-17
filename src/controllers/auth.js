@@ -229,14 +229,16 @@ router.post('/accounts/reset/request', (req, res) => {
                 replyTo: 'donotreply@kitchen.support',
                 subject: 'Reset your Kitchen Support password',
                 text: `Hey there, you seem to have requested a password reset. Click on the link below to enter your new password! Warning: the link is only active for 30 minutes from the time that this email is sent!\n\nhttp://kitchen.support/#/forgot-password/${token}\n\nIf this wasnt you, you can disregard this email.`
-            }, (err, info) => {
-                console.error(err);
-                console.log(info);
+            }, (err) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500);
+                    res.send();
+
+                    return;
+                }
                 res.status(200);
-                res.send({
-                    status: 'success',
-                    reset_token: token
-                });
+                res.send();
             });
         }).catch((error) => {
             console.error(error);
@@ -263,7 +265,7 @@ router.post('/accounts/reset/confirm', (req, res) => {
                 res.status(200);
                 res.send();
             }).catch((error) => {
-                res.status(500);
+                res.status(401);
                 res.send({
                     status: 'failure',
                     error
@@ -276,36 +278,4 @@ router.post('/accounts/reset/confirm', (req, res) => {
             error
         });
     });
-
-    // PasswordResetToken.query((query) => {
-    //
-    //     // query.where('expire_date', '>', Date.now()).andWhere('reset_token', req.body.reset_token);
-    //     query.where('reset_token', req.body.reset_token);
-    // })
-    //     .fetch()
-    //     .then((resetToken) => {
-    //         User.hashPassword(req.body.password)
-    //             .then((hash) => {
-    //                 console.log(hash);
-    //                 return User.where({id: resetToken.get('user_id')}).save({password: hash});
-    //             }).then((user) => {
-    //                 res.status(200);
-    //                 res.send({
-    //                     status: 'success',
-    //                     user
-    //                 });
-    //             }).catch((error) => {
-    //                 res.status(500);
-    //                 res.send({
-    //                     status: 'failure',
-    //                     error
-    //                 });
-    //             });
-    //     }).catch(() => {
-    //         res.status(400);
-    //         res.send({
-    //             status: 'failure',
-    //             error: 'Invalid reset token'
-    //         });
-    //     });
 });
