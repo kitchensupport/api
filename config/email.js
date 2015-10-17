@@ -1,4 +1,5 @@
 export default {
-    user: process.env.GMAIL_USERNAME,
-    pass: process.env.GMAIL_PASSWORD
+    fromEmail: process.env.CS307_EMAIL_ADDRESS,
+    sendGridApiKey: process.env.SENDGRID_API,
+    mandrillApiKey: process.env.MANDRILL_API
 };

@@ -2,6 +2,7 @@ import express from 'express';
 import uuid from 'node-uuid';
 import request from 'request';
 import mailer from 'nodemailer';
+import mandrill from 'nodemailer-mandrill-transport';
 import User from '../models/user';
 import PasswordResetToken from '../models/password-reset';
 import emailConfig from '../../config/email';
@@ -15,10 +16,11 @@ let mailTransport;
  * @return {ExpressApplication} - an express application with registered routes
  */
 export function routes() {
-    mailTransport = mailer.createTransport({
-        service: 'gmail',
-        auth: emailConfig
-    });
+    mailTransport = mailer.createTransport(mandrill({
+        auth: {
+            apiKey: emailConfig.mandrillApiKey
+        }
+    }));
 
     return router;
 };
@@ -224,7 +226,7 @@ router.post('/accounts/reset/request', (req, res) => {
             }).save();
         }).then(() => {
             mailTransport.sendMail({
-                from: `Kitchen Support <${emailConfig.user}>`,
+                from: `Kitchen Support <${emailConfig.fromEmail}>`,
                 to: req.body.email,
                 replyTo: 'donotreply@kitchen.support',
                 subject: 'Reset your Kitchen Support password',
