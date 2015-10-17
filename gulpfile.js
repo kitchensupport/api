@@ -11,6 +11,8 @@ const server = new forever.Monitor('./index.js');
 let isRunning = false;
 
 process.env.NODE_ENV = 'development';
+process.env.PGSSLMODE = 'require';
+
 server.on('start', () => {
     console.log(`DEV: starting server at ${Date.now()}`);
 });

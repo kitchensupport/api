@@ -7,12 +7,14 @@ model('users', (schema) => {
     schema.string('email').unique();
     schema.string('password');
     schema.string('facebook_token').unique();
-    schema.string('token').unique();
+    schema.string('api_token').unique();
     schema.timestamps();
 });
 
 const Model = bookshelf.Model.extend({
     tableName: 'users',
+
+    hasTimestamps: true,
 
     checkPassword(password) {
         return new Promise((resolve, reject) => {

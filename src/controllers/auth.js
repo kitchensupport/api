@@ -1,15 +1,25 @@
 import express from 'express';
 import uuid from 'node-uuid';
 import request from 'request';
+import mailer from 'nodemailer';
 import User from '../models/user';
+import PasswordResetToken from '../models/password-reset';
+import emailConfig from '../../config/email';
 
 const router = express();
+let mailTransport;
 
 /**
  * a middleware that lets the root server use all of the login routes
+ * sets up nodemailer for use by the module later
  * @return {ExpressApplication} - an express application with registered routes
  */
 export function routes() {
+    mailTransport = mailer.createTransport({
+        service: 'gmail',
+        auth: emailConfig
+    });
+
     return router;
 };
 
@@ -45,7 +55,7 @@ export function createUser(attrs) {
 
         User.hashPassword(password)
             .then((hash) => {
-                return new User.Model({email, password: hash, facebook_token: facebookToken, token}).save();
+                return new User.Model({email, password: hash, facebook_token: facebookToken, api_token: token}).save();
             }).then((user) => {
                 if (user) {
                     resolve(user.omit('password'));
@@ -185,7 +195,7 @@ router.post('/accounts/login', (req, res) => {
 });
 
 router.get('/account', (req, res, next) => {
-    getUser({token: req.query.token})
+    getUser({api_token: req.query.token})
         .then((user) => {
             res.status(200);
             res.send({
@@ -201,4 +211,71 @@ router.get('/account', (req, res, next) => {
 
             next(error);
         });
+});
+
+router.post('/accounts/reset/request', (req, res) => {
+    const token = uuid.v4();
+
+    getUser({email: req.body.email})
+        .then((user) => {
+            return new PasswordResetToken({
+                user_id: user.id,
+                reset_token: token
+            }).save();
+        }).then(() => {
+            mailTransport.sendMail({
+                from: `Kitchen Support <${emailConfig.user}>`,
+                to: req.body.email,
+                replyTo: 'donotreply@kitchen.support',
+                subject: 'Reset your Kitchen Support password',
+                text: `Hey there, you seem to have requested a password reset. Click on the link below to enter your new password! Warning: the link is only active for 30 minutes from the time that this email is sent!\n\nhttp://kitchen.support/#/forgot-password/${token}\n\nIf this wasnt you, you can disregard this email.`
+            }, (err) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500);
+                    res.send();
+
+                    return;
+                }
+                res.status(200);
+                res.send();
+            });
+        }).catch((error) => {
+            console.error(error);
+            res.status(401);
+            res.send({
+                status: 'failure',
+                error: 'No user associated with that token and email'
+            });
+        });
+});
+
+router.post('/accounts/reset/confirm', (req, res) => {
+    const getResetToken = PasswordResetToken.query((query) => {
+        query.where('reset_token', req.body.reset_token).andWhere('expire_date', '>', new Date().toISOString());
+    }).fetch();
+    const hashPassword = User.hashPassword(req.body.password);
+
+    Promise.all([getResetToken, hashPassword]).then((values) => {
+        console.log(values);
+        console.log(new Date().toISOString());
+        User.Model.where('id', values[0].attributes.user_id)
+            .save({password: values[1]}, {patch: true, method: 'update'})
+            .then(() => {
+                res.status(200);
+                res.send();
+            }).catch((error) => {
+                res.status(401);
+                res.send({
+                    status: 'failure',
+                    error
+                });
+            });
+    }).catch((error) => {
+        res.status(500);
+        res.send({
+            status: 'failure',
+            error
+        });
+    });
 });
