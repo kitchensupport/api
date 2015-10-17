@@ -216,7 +216,7 @@ router.get('/account', (req, res, next) => {
 router.post('/accounts/reset/request', (req, res) => {
     const token = uuid.v4();
 
-    getUser({api_token: req.query.token, email: req.body.email})
+    getUser({email: req.body.email})
         .then((user) => {
             return new PasswordResetToken({
                 user_id: user.id,
@@ -228,18 +228,14 @@ router.post('/accounts/reset/request', (req, res) => {
                 to: req.body.email,
                 replyTo: 'donotreply@kitchen.support',
                 subject: 'Reset your Kitchen Support password',
-                text: `Hey there, you seem to have requested a password reset. Click on the link
-                below to enter your new password! Warning: the link is only active for 30 minutes
-                from the time that this email is sent!\n\n
-                http://kitchen.support/#/forgot-password/${token}\n\n
-                If this wasnt you, you can disregard this email.`
+                text: `Hey there, you seem to have requested a password reset. Click on the link below to enter your new password! Warning: the link is only active for 30 minutes from the time that this email is sent!\n\nhttp://kitchen.support/#/forgot-password/${token}\n\nIf this wasnt you, you can disregard this email.`
             }, (err, info) => {
                 console.error(err);
                 console.log(info);
                 res.status(200);
                 res.send({
                     status: 'success',
-                    message: 'An email has been sent to the user\'s account with a link to reset their password'
+                    reset_token: token
                 });
             });
         }).catch((error) => {
@@ -252,6 +248,64 @@ router.post('/accounts/reset/request', (req, res) => {
         });
 });
 
-router.post('/accounts/reset/confirm', () => {
+router.post('/accounts/reset/confirm', (req, res) => {
+    const getResetToken = PasswordResetToken.query((query) => {
+        query.where('reset_token', req.body.reset_token).andWhere('expire_date', '>', new Date().toISOString());
+    }).fetch();
+    const hashPassword = User.hashPassword(req.body.password);
 
+    Promise.all([getResetToken, hashPassword]).then((values) => {
+        console.log(values);
+        console.log(new Date().toISOString());
+        User.Model.where('id', values[0].attributes.user_id)
+            .save({password: values[1]}, {patch: true, method: 'update'})
+            .then(() => {
+                res.status(200);
+                res.send();
+            }).catch((error) => {
+                res.status(500);
+                res.send({
+                    status: 'failure',
+                    error
+                });
+            });
+    }).catch((error) => {
+        res.status(500);
+        res.send({
+            status: 'failure',
+            error
+        });
+    });
+
+    // PasswordResetToken.query((query) => {
+    //
+    //     // query.where('expire_date', '>', Date.now()).andWhere('reset_token', req.body.reset_token);
+    //     query.where('reset_token', req.body.reset_token);
+    // })
+    //     .fetch()
+    //     .then((resetToken) => {
+    //         User.hashPassword(req.body.password)
+    //             .then((hash) => {
+    //                 console.log(hash);
+    //                 return User.where({id: resetToken.get('user_id')}).save({password: hash});
+    //             }).then((user) => {
+    //                 res.status(200);
+    //                 res.send({
+    //                     status: 'success',
+    //                     user
+    //                 });
+    //             }).catch((error) => {
+    //                 res.status(500);
+    //                 res.send({
+    //                     status: 'failure',
+    //                     error
+    //                 });
+    //             });
+    //     }).catch(() => {
+    //         res.status(400);
+    //         res.send({
+    //             status: 'failure',
+    //             error: 'Invalid reset token'
+    //         });
+    //     });
 });
