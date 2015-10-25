@@ -24,8 +24,8 @@ app.get('/protected', authorize(), (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.log(err);
-    next(err);
+    console.error(`ERROR: ${err.message}`);
+    next();
 });
 
 export default app;
