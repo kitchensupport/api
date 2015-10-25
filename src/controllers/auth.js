@@ -231,9 +231,7 @@ router.post('/accounts/reset/request', (req, res, next) => {
 });
 
 router.post('/accounts/reset/confirm', (req, res, next) => {
-    const getResetToken = PasswordResetToken.query((query) => {
-        query.where('reset_token', req.body.reset_token).andWhere('expire_date', '>', new Date().toISOString());
-    }).fetch();
+    const getResetToken = PasswordResetToken.where('reset_token', req.body.reset_token).fetch();
     const hashPassword = User.hashPassword(req.body.password);
 
     Promise.all([getResetToken, hashPassword])
@@ -242,9 +240,20 @@ router.post('/accounts/reset/confirm', (req, res, next) => {
                 throw new Error('Invalid reset token');
             }
 
+            const expireDate = new Date(values[0].attributes.expire_date);
+            const userId = values[0].attributes.user_id;
+
+            return values[0].destroy().then(() => {
+                if (new Date() > expireDate) {
+                    throw new Error('Invalid reset token');
+                } else {
+                    return {userId, password: values[1]};
+                }
+            });
+        }).then((attrs) => {
             return User.Model
-                .where('id', values[0].attributes.user_id)
-                .save({password: values[1]}, {patch: true, method: 'update'});
+                .where('id', attrs.userId)
+                .save({password: attrs.password}, {patch: true, method: 'update'});
         }).then(() => {
             res.status(200).send({status: 'success'});
         }).catch((err) => {
