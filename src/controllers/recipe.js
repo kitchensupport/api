@@ -9,7 +9,9 @@ export function routes() {
     return router;
 };
 
-export function yummly({path, queryParams = {}, jsonp = false, body = null}) {
+export function yummly(params) {
+    const {path, queryParams = {}, jsonp = false, body = null} = params;
+
     return new Promise((resolve, reject) => {
         let requestParams = {
             baseUrl: yummlyConfig.baseUrl,
