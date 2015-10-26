@@ -150,10 +150,17 @@ export function sendResetToken(user) {
     const token = uuid.v4();
 
     return new Promise((resolve, reject) => {
-        new PasswordResetToken()
-            .save({
-                user_id: user.id,
-                reset_token: token
+        PasswordResetToken.where({user_id: user.id})
+            .fetch()
+            .then((model) => {
+                if (!model) {
+                    return new PasswordResetToken({
+                        user_id: user.id,
+                        reset_token: token
+                    }).save();
+                } else {
+                    return model.save({reset_token: token}, {patch: true});
+                }
             }).then(() => {
                 return sendMail({
                     to: user.email,
@@ -161,6 +168,41 @@ export function sendResetToken(user) {
                     text: `Hey there, you seem to have requested a password reset. Click on the link below to enter your new password! Warning: the link is only active for 30 minutes from the time that this email is sent!\n\nhttp://kitchen.support/#/forgot-password/${token}\n\nIf this wasnt you, you can disregard this email.`
                 });
             }).then(resolve).catch(reject);
+    });
+};
+
+export function resetPassword(req) {
+    const {password, reset_token} = req;
+
+    return Promise.all([
+        () => {
+            PasswordResetToken.where('reset_token', reset_token).fetch();
+        },
+        () => {
+            User.hashPassword(password);
+        }
+    ]).then((values) => {
+        if (!values[0]) {
+            throw new Error('Invalid reset token');
+        }
+
+        const expireDate = new Date(values[0].attributes.expire_date);
+        const userId = values[0].attributes.user_id;
+
+        return values[0].destroy().then(() => {
+            if (new Date() > expireDate) {
+                throw new Error('Invalid reset token');
+            } else {
+                return {userId, password: values[1]};
+            }
+        });
+    }).then((attrs) => {
+        return User.Model
+            .where('id', attrs.userId)
+            .save({password: attrs.password}, {patch: true, method: 'update'})
+            .then((user) => {
+                return user.omit('password');
+            });
     });
 };
 
@@ -231,33 +273,10 @@ router.post('/accounts/reset/request', (req, res, next) => {
 });
 
 router.post('/accounts/reset/confirm', (req, res, next) => {
-    const getResetToken = PasswordResetToken.where('reset_token', req.body.reset_token).fetch();
-    const hashPassword = User.hashPassword(req.body.password);
-
-    Promise.all([getResetToken, hashPassword])
-        .then((values) => {
-            if (!values[0]) {
-                throw new Error('Invalid reset token');
-            }
-
-            const expireDate = new Date(values[0].attributes.expire_date);
-            const userId = values[0].attributes.user_id;
-
-            return values[0].destroy().then(() => {
-                if (new Date() > expireDate) {
-                    throw new Error('Invalid reset token');
-                } else {
-                    return {userId, password: values[1]};
-                }
-            });
-        }).then((attrs) => {
-            return User.Model
-                .where('id', attrs.userId)
-                .save({password: attrs.password}, {patch: true, method: 'update'});
-        }).then(() => {
-            res.status(200).send({status: 'success'});
-        }).catch((err) => {
-            res.status(500).send({status: 'failure'});
-            next(err);
-        });
+    resetPassword(req.body).then(() => {
+        res.status(200).send({status: 'success'});
+    }).catch((err) => {
+        res.status(500).send({status: 'failure'});
+        next(err);
+    });
 });
