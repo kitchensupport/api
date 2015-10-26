@@ -1,76 +1,110 @@
 import express from 'express';
 import request from 'request';
-import yummly from '../../config/yummly.js';
+import _ from 'lodash';
+import yummlyConfig from '../../config/yummly.js';
 
 const router = express();
-const YUMMLY_BASE_URL = `http://api.yummly.com/v1/api/`;
-const YUMMLY_KEYS = `_app_id=${yummly.id}&_app_key=${yummly.key}`;
-const YUMMLY_PARAMS = `maxResult=8`;
-const YUMMLY_RECIPE_SEARCH_URL = `${YUMMLY_BASE_URL}recipes?${YUMMLY_KEYS}&${YUMMLY_PARAMS}`;
 
 export function routes() {
     return router;
 };
 
-router.get('/recipes/featured', (req, res) => {
-    request({uri: YUMMLY_RECIPE_SEARCH_URL,
-        timeout: 15000,
-        followRedirect: true,
-        maxRedirects: 10,
-        json: true
-    }, (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-            res.status(200);
-            res.send({status: 'success', data: body});
-        } else {
-            console.log(`ER: ${error}, ${response.statusCode}`);
-            res.status(400);
-            res.send({
-                status: 'failure',
-                error: `${response.statusCode}: Unable to retrieve recipes.`
-            });
+export function yummly({path, queryParams = {}, jsonp = false, body = null}) {
+    return new Promise((resolve, reject) => {
+        let requestParams = {
+            baseUrl: yummlyConfig.baseUrl,
+            uri: path,
+            qs: _.assign({}, queryParams, yummlyConfig.queryParams),
+            timeout: 5000,
+            followRedirects: true,
+            maxRedirects: 10,
+            json: !jsonp
+        };
+
+        if (body) {
+            requestParams = _.assign(requestParams, {body});
         }
+
+        request(requestParams, (err, response, resBody) => {
+            if (err) {
+                console.error(err);
+                return reject(err);
+            } else if (response.statusCode >= 400) {
+                console.error(response);
+                return reject(response);
+            }
+
+            if (jsonp) {
+                const jsonStart = resBody.indexOf('({');
+                const jsonEnd = resBody.indexOf('})');
+                const json = JSON.parse(resBody.substring(jsonStart + 1, jsonEnd + 1));
+
+                resolve(json);
+            } else {
+                resolve(resBody);
+            }
+        });
+    });
+};
+
+/* ********* route initialization ********* */
+
+router.get('/recipes/featured', (req, res, next) => {
+    yummly({
+        path: '/recipes',
+        queryParams: {
+            maxResult: 8
+        }
+    }).then((data) => {
+        res.status(200).send({
+            status: 'success',
+            data
+        });
+    }).catch(() => {
+        res.status(400).send({
+            status: 'failure',
+            error: 'Unable to retrieve recipes'
+        });
+
+        next(new Error('Unable to retrieve featured recipes'));
     });
 });
 
-router.get('/recipes/search/:searchTerm', (req, res) => {
-    request({uri: `${YUMMLY_RECIPE_SEARCH_URL}&q=${req.params.searchTerm}`,
-        timeout: 15000,
-        followRedirect: true,
-        maxRedirects: 10,
-        json: true
-    }, (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-            res.status(200);
-            res.send({status: 'success', data: body});
-        } else {
-            console.log(error);
-            res.status(400);
-            res.send({
-                status: 'failure',
-                error: `${response.statusCode}: Unable to resolve recipe search.`
-            });
+router.get('/recipes/search/:searchTerm', (req, res, next) => {
+    yummly({
+        path: '/recipes',
+        queryParams: {
+            q: req.params.searchTerm
         }
+    }).then((data) => {
+        res.status(200).send({
+            status: 'success',
+            data
+        });
+    }).catch(() => {
+        res.status(400).send({
+            status: 'failure',
+            error: 'Unable to search for recipes'
+        });
+
+        next(new Error(`Unable to search recipes like ${req.params.searchTerm}`));
     });
 });
 
-router.get('/recipes/recipe/:recipeId', (req, res) => {
-    request({uri: `${YUMMLY_BASE_URL}recipe/${req.params.recipeId}?${YUMMLY_KEYS}&${YUMMLY_PARAMS}`,
-        timeout: 15000,
-        followRedirect: true,
-        maxRedirects: 10,
-        json: true
-    }, (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-            res.status(200);
-            res.send({status: 'success', data: body});
-        } else {
-            console.log(error);
-            res.status(400);
-            res.send({
-                status: 'failure',
-                error: `${response.statusCode}: Unable to resolve recipe search.`
-            });
-        }
+router.get('/recipe/:recipeId', (req, res, next) => {
+    yummly({
+        path: `recipe/${req.params.recipeId}`
+    }).then((data) => {
+        res.status(200).send({
+            status: 'success',
+            data
+        });
+    }).catch(() => {
+        res.status(400).send({
+            status: 'failure',
+            error: 'Unable to retrieve recipe'
+        });
+
+        next(new Error(`Unable to retrieve recipe with id ${req.params.recipeId}`));
     });
 });
