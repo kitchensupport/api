@@ -175,34 +175,29 @@ export function resetPassword(req) {
     const {password, reset_token} = req;
 
     return Promise.all([
-        () => {
-            PasswordResetToken.where('reset_token', reset_token).fetch();
-        },
-        () => {
-            User.hashPassword(password);
-        }
+        PasswordResetToken.where('reset_token', reset_token).fetch({
+            withRelated: 'user'
+        }),
+        User.hashPassword(password)
     ]).then((values) => {
         if (!values[0]) {
             throw new Error('Invalid reset token');
         }
 
-        const expireDate = new Date(values[0].attributes.expire_date);
-        const userId = values[0].attributes.user_id;
+        const expireDate = new Date(values[0].get('expire_date'));
+        const newPassword = values[1];
 
-        return values[0].destroy().then(() => {
+        return values[0].destroy().then((resetToken) => {
             if (new Date() > expireDate) {
                 throw new Error('Invalid reset token');
             } else {
-                return {userId, password: values[1]};
+                return resetToken.related('user').save({
+                    password: newPassword
+                }, {
+                    patch: true
+                });
             }
         });
-    }).then((attrs) => {
-        return User.Model
-            .where('id', attrs.userId)
-            .save({password: attrs.password}, {patch: true, method: 'update'})
-            .then((user) => {
-                return user.omit('password');
-            });
     });
 };
 
