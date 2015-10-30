@@ -1,6 +1,7 @@
 import bookshelf from '../utils/database';
 import knex from 'knex';
 import model from '../utils/model';
+import {Model as User} from './user';
 
 model('reset_password', (schema) => {
     schema.increments('id').primary();
@@ -10,5 +11,9 @@ model('reset_password', (schema) => {
 });
 
 export default bookshelf.Model.extend({
-    tableName: 'reset_password'
+    tableName: 'reset_password',
+
+    user() {
+        return this.belongsTo(User);
+    }
 });

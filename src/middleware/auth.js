@@ -6,14 +6,13 @@ import User from '../models/user';
  */
 export function authorize() {
     return (req, res, next) => {
-        const token = req.query.token;
+        const token = req.query.token || req.body.token;
 
         if (!token) {
-
             return next(new Error('Unauthorized'));
         }
 
-        User.Model.where('token', token).fetch().then((user) => {
+        User.Model.where('api_token', token).fetch().then((user) => {
             req.user = user.omit('password');
             next();
         }).catch((error) => {
