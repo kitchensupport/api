@@ -7,6 +7,7 @@ model('likes', (schema) => {
     schema.increments('id').primary();
     schema.integer('user_id').references('id').inTable('users').notNullable();
     schema.integer('recipe_id').references('id').inTable('recipes').notNullable();
+    schema.unique(['user_id', 'recipe_id']);
 });
 
 export default bookshelf.Model.extend({

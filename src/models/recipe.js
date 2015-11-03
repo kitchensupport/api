@@ -8,7 +8,20 @@ model('recipes', (schema) => {
 });
 
 export default bookshelf.Model.extend({
-    tableName: 'recipes'
+    tableName: 'recipes',
+
+    serialize() {
+        const id = this.get('id');
+        const data = this.get('data');
+
+        data.yummly_id = data.id;
+        delete data.id;
+
+        return {
+            id,
+            data
+        };
+    }
 
     // TODO: implement central store to store models so we can have a cyclic relationship
 });

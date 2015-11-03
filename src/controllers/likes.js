@@ -14,36 +14,38 @@ export function routes() {
 router.use('/likes', authorize());
 const likes = router.route('/likes');
 
-likes.get((req, res) => {
+likes.get((req, res, next) => {
     User.where({id: req.user.id})
         .fetch({withRelated: ['likes']})
         .then((user) => {
-            console.log(user.related('likes'));
-            res.status(200).send();
+            res.status(200).send({
+                status: 'success',
+                likes: user.related('likes').toJSON()
+            });
+        }).catch(() => {
+            res.status(403).send({
+                status: 'failure',
+                error: 'Unable to retrieve this user\'s likes'
+            });
+
+            next(new Error(`Unable to retrieve user ${req.user.id}'s likes`));
         });
 });
 
 likes.post((req, res, next) => {
-    Like.where({user_id: req.user.id, recipe_id: req.body.recipe_id})
-        .fetch()
-        .then((like) => {
-            if (like) {
-                throw new Error('User has already liked this recipe');
-            }
-        }).then(() => {
-            return new Like({user_id: req.user.id, recipe_id: req.body.recipe_id})
-                .save();
-        }).then(() => {
+    new Like({user_id: req.user.id, recipe_id: req.body.recipe_id})
+        .save()
+        .then(() => {
             res.status(200).send({
                 status: 'success'
             });
-        }).catch((err) => {
-            res.status(400).send({
+        }).catch(() => {
+            res.status(403).send({
                 status: 'failure',
-                error: err.message
+                error: 'Can not like this recipe'
             });
 
-            next(err);
+            next(new Error(`User ${req.user.id} can not like recipe ${req.body.recipe_id}`));
         });
 });
 
@@ -56,7 +58,8 @@ likes.delete((req, res, next) => {
             });
         }).catch((err) => {
             res.status(400).send({
-                status: 'failure'
+                status: 'failure',
+                message: 'Unable to delete like'
             });
 
             next(err);
