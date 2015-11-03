@@ -51,7 +51,7 @@ export function createUser(attrs) {
                 return new User.Model({email, password: hash, facebook_token: facebookToken, api_token: token}).save();
             }).then((user) => {
                 if (user) {
-                    resolve(user.omit('password'));
+                    resolve(user.toJSON());
                 } else {
                     reject(new Error('The user could not be saved'));
                 }
@@ -103,7 +103,7 @@ export function getUser(attrs) {
         User.Model.where(attrs)
             .fetch()
             .then((user) => {
-                resolve(user.omit('password'));
+                resolve(user.toJSON());
             })
             .catch(reject);
     });
@@ -132,14 +132,14 @@ export function logUserIn(attrs) {
                     }
                 })
                 .then((user) => {
-                    resolve(user.omit('password'));
+                    resolve(user.toJSON());
                 })
                 .catch(reject);
         } else {
             User.Model.where({facebook_token: facebookToken})
                 .fetch()
                 .then((user) => {
-                    resolve(user.omit('password'));
+                    resolve(user.toJSON());
                 })
                 .catch(reject);
         }
@@ -240,7 +240,7 @@ router.post('/accounts/login', (req, res, next) => {
 });
 
 router.get('/account', (req, res, next) => {
-    getUser({api_token: req.query.token})
+    getUser({api_token: req.query.api_token})
         .then((user) => {
             res.status(200).send({
                 status: 'success',

@@ -31,6 +31,10 @@ const Model = bookshelf.Model.extend({
 
     likes() {
         return this.belongsToMany(Recipe, 'likes', 'user_id', 'recipe_id');
+    },
+
+    serialize() {
+        return this.omit('password');
     }
 });
 
