@@ -9,4 +9,6 @@ model('recipes', (schema) => {
 
 export default bookshelf.Model.extend({
     tableName: 'recipes'
+
+    // TODO: implement central store to store models so we can have a cyclic relationship
 });

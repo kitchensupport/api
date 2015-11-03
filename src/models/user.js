@@ -1,6 +1,7 @@
+import bcrypt from 'bcrypt';
+import Recipe from './recipe';
 import bookshelf from '../utils/database';
 import model from '../utils/model';
-import bcrypt from 'bcrypt';
 
 model('users', (schema) => {
     schema.increments('id').primary();
@@ -26,6 +27,10 @@ const Model = bookshelf.Model.extend({
                 }
             });
         });
+    },
+
+    likes() {
+        return this.belongsToMany(Recipe, 'likes', 'user_id', 'recipe_id');
     }
 });
 

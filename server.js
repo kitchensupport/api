@@ -2,9 +2,11 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import morgan from 'morgan';
-import {authorize} from './src/middleware/auth';
+import authorize from './src/middleware/auth';
 import {routes as authRouter} from './src/controllers/auth';
 import {routes as recipeRouter} from './src/controllers/recipe';
+import {routes as likesRouter} from './src/controllers/likes';
+import {routes as streamRouter} from './src/controllers/stream';
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 // controllers
 app.use(authRouter());
 app.use(recipeRouter());
+app.use(likesRouter());
+app.use(streamRouter());
 
 app.get('/protected', authorize(), (req, res) => {
     res.status(200);

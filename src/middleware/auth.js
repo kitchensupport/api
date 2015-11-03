@@ -4,9 +4,9 @@ import User from '../models/user';
  * a middleware for ensuring a valid token is included with the attaching route
  * @return {Function} - an express middleware to check for a valid token in the query parameter
  */
-export function authorize() {
+export default function authorize() {
     return (req, res, next) => {
-        const token = req.query.token || req.body.token;
+        const token = req.query.api_token || req.body.api_token;
 
         if (!token) {
             return next(new Error('Unauthorized'));
