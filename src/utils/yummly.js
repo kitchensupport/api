@@ -32,8 +32,6 @@ export function cacheMany(yummlyRecipes) {
         return recipe.id;
     });
 
-    console.log(`yummly recipes: ${yummlyRecipes.length}`);
-
     return RecipeCollection.query((query) => {
         query.whereIn('yummly_id', yummlyIds);
     }).fetch().then((collection) => {
@@ -48,18 +46,13 @@ export function cacheMany(yummlyRecipes) {
             return (dbIds.indexOf(recipe.id) === -1);
         });
 
-        console.log(`new recipes: ${newRecipes.length}`);
-        console.log(`collection length before: ${collection.size()}`);
-
         // save the new recipes
         return collection.add(newRecipes.map((recipe) => {
             return new Recipe({yummly_id: recipe.id, data: recipe});
         })).invokeThen('save').then(() => {
-            console.log(`collection length after: ${collection.size()}`);
             return collection;
         });
-    }).catch((err) => {
-        console.log(err);
+    }).catch(() => {
         return new Error('Could not cache recipes');
     });
 };
@@ -71,7 +64,7 @@ export function get(params) {
         let requestParams = {
             baseUrl: yummlyConfig.baseUrl,
             uri: path,
-            qs: _.assign({}, queryParams, yummlyConfig.queryParams),
+            qs: _.defaults({}, queryParams, yummlyConfig.queryParams),
             timeout: 5000,
             followRedirects: true,
             maxRedirects: 10,

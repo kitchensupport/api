@@ -12,7 +12,7 @@ export function getRecipeStream({forceNew = true, maxResult = 30, offset = 0}) {
     if (forceNew) {
         return yummly.get({
             path: '/recipes',
-            q: {
+            queryParams: {
                 maxResult,
                 offset
             }
@@ -34,10 +34,7 @@ router.get('/stream', (req, res, next) => {
         maxResults: req.query.maxResults,
         offset: req.query.offset
     }).then((recipes) => {
-        const recipesJSON = recipes.toJSON();
-
-        recipesJSON.status = 'success';
-        res.status(200).send(recipesJSON);
+        res.status(200).send(recipes.toJSON({status: 'success'}));
     }).catch(() => {
         res.status(403).send({
             status: 'failure',

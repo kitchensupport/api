@@ -10,11 +10,12 @@ model('recipes', (schema) => {
 
 export const Model = bookshelf.Model.extend({
     tableName: 'recipes',
-    serialize(additional) {
+    serialize({additional = {}}) {
         const data = this.get('data');
+        const id = this.get('id');
 
         data.yummly_id = data.id;
-        data.id = this.get('id');
+        data.id = id;
 
         return _.defaults(data, additional);
     }
