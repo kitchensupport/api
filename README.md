@@ -88,41 +88,37 @@ POST http://api.kitchen.support/accounts/reset/confirm
 #### The recipe object
 ```json
 {
-    "status": "success",
-    "recipe": {
-        "id": 3,
-        "data": {
-            "rating": 3,
-            "flavors": {
-                "sour": 0.5,
-                "meaty": 0,
-                "salty": 0,
-                "sweet": 0.8333333333333334,
-                "bitter": 0,
-                "piquant": 0
-            },
-            "attributes": {
-                "course": []
-            },
-            "recipeName": "Home Remedies Against Bronchitis, Cough and Lung Problems!",
-            "ingredients": [
-                "purple onion",
-                "sugar",
-                "lemon",
-                "water",
-                "honey"
-            ],
-            "smallImageUrls": [
-                "https://lh3.googleusercontent.com/HO_Wkrz3TvqHuNZlxsB4SflVkR5yIyJF20_mAVhnUfIyN0-Jn4wB2bEf2SjekjZvS6M2q3v6IKPfevKcYFG88A=s90"
-            ],
-            "imageUrlsBySize": {
-                "90": "https://lh3.googleusercontent.com/xw77XWwOrxFUTnJOUj02URIKfhU_ULzeylcLCJXngX8Wu7b461u4iPl9y4JozTsGR9vsb-Cz98WmZL-3qgu83g=s90-c"
-            },
-            "sourceDisplayName": "Healthy Food Team",
-            "totalTimeInSeconds": 2400,
-            "yummly_id": "Home-Remedies-Against-Bronchitis_-Cough-and-Lung-Problems_-1357174"
-        }
-    }
+  "id": 3,
+  "rating": 3,
+  "flavors": {
+    "sour": 0.5,
+    "meaty": 0,
+    "salty": 0,
+    "sweet": 0.8333333333333334,
+    "bitter": 0,
+    "piquant": 0
+  },
+  "attributes": {
+    "course": []
+  },
+  "recipeName": "Home Remedies Against Bronchitis, Cough and Lung Problems!",
+  "ingredients": [
+    "purple onion",
+    "sugar",
+    "lemon",
+    "water",
+    "honey"
+  ],
+  "smallImageUrls": [
+    "https://lh3.googleusercontent.com/HO_Wkrz3TvqHuNZlxsB4SflVkR5yIyJF20_mAVhnUfIyN0-Jn4wB2bEf2SjekjZvS6M2q3v6IKPfevKcYFG88A=s90"
+  ],
+  "imageUrlsBySize": {
+    "90": "https://lh3.googleusercontent.com/xw77XWwOrxFUTnJOUj02URIKfhU_ULzeylcLCJXngX8Wu7b461u4iPl9y4JozTsGR9vsb-Cz98WmZL-3qgu83g=s90-c"
+  },
+  "sourceDisplayName": "Healthy Food Team",
+  "totalTimeInSeconds": 2400,
+  "yummly_id": "Home-Remedies-Against-Bronchitis_-Cough-and-Lung-Problems_-1357174",
+  "status": "success"
 }
 ```
 
@@ -133,18 +129,22 @@ GET http://api.kitchen.support/stream
 ```
 
 **Arguments**
-- `page`: the integer page number, where each page returns 30 results. [**UNIMPLEMENTED**]
+- `maxResult`: The number of recipes to return, 30 by default.
+- `offset`: The offset in the list to return. Similar to the idea of "paging". [**UNIMPLEMENTED**]
+- `forceNew`: If `forceNew` is set to `true`, the API will call out to Yummly first to get relevant recipes, cache them, and then return the result. This call takes significantly longer with `forceNew` set, and as such it's use is discouraged except to build out the database.
 
 **Return**: Returns an array of recipe objects.
 
 #### Get a single recipe
 **Definition**
 ```
-GET http://api.kitchen.support/recipe/:yummlyId
+GET http://api.kitchen.support/recipe
 ```
 
 **Arguments**
-- `yummlyId`: the `yummly_id` (*not* the `id`) of a given recipe.
+- `id`: the `id` of a given recipe.
+- `yummly_id`: the `yummly_id` of a given recipe.
+- *Note*: `id` will take precedence over `yummly_id`, as only one is ever used.
 
 #### Search for a recipe
 **Definition**
@@ -154,6 +154,7 @@ GET http://api.kitchen.support/recipes/search/:searchTerm
 
 **Arguments**
 - `searchTerm`: Any term to search the Yummly API for.
+- `forceNew`: If `forceNew` is set to `true`, the API will call out to Yummly first to get the day's featured recipes, cache them, and then return the result. This call takes significantly longer with `forceNew` set, and as such it's use is discouraged except to build out the database.
 
 ### Liking recipes
 #### Get a user's liked recipes
