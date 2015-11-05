@@ -1,10 +1,8 @@
 import knex from 'knex';
 import bs from 'bookshelf';
-import db from '../../config/database.js';
+import dbConfig from '../../config/database.js';
 
-const bookshelf = bs(knex({
+export default bs(knex({
     client: 'pg',
-    connection: db.connectionString
+    connection: dbConfig.connectionString
 }));
-
-export default bookshelf;

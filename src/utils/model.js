@@ -1,4 +1,4 @@
-import bookshelf from '../utils/database';
+import bookshelf from './database';
 
 /**
  * If the table doesn't exist, we create the table based on the model schema provided.
