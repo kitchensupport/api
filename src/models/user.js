@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
-import Recipe from './recipe';
+import _ from 'lodash';
+import {Model as Recipe} from './recipe';
 import bookshelf from '../utils/database';
 import model from '../utils/model';
 
@@ -33,8 +34,8 @@ const Model = bookshelf.Model.extend({
         return this.belongsToMany(Recipe, 'likes', 'user_id', 'recipe_id');
     },
 
-    serialize() {
-        return this.omit('password');
+    serialize(additional) {
+        return _.defaults(this.omit('password'), additional);
     }
 });
 

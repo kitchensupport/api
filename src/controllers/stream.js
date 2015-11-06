@@ -1,64 +1,42 @@
 import express from 'express';
-import _ from 'lodash';
-import yummly from '../utils/yummly';
-import bookshelf from '../utils/database';
-import Recipe from '../models/recipe';
+import * as yummly from '../utils/yummly';
+import * as recipe from '../models/recipe';
 
 const router = express();
-const db = bookshelf.knex;
 
 export function routes() {
     return router;
 };
 
-export function getRecipeStream(params) {
-    const {queryParams = {}} = params;
-
-    return yummly({
-        path: '/recipes',
-        queryParams
-    }).then((data) => {
-        const yummlyIds = data.matches.map((recipe) => {
-            return recipe.id;
+export function getRecipeStream({forceNew = true, maxResult = 30, offset = 0}) {
+    if (forceNew) {
+        return yummly.get({
+            path: '/recipes',
+            queryParams: {
+                maxResult,
+                offset
+            }
+        }).then((data) => {
+            return yummly.cacheMany(data.matches);
         });
-
-        return Recipe.collection().query((query) => {
-            query.whereIn('yummly_id', yummlyIds);
-        }).fetch().then((collection) => {
-            const dbIds = collection.map((dbEntry) => {
-                return dbEntry.get('yummly_id');
-            });
-
-            // we only want to insert recipes that arent in the database yet, since recipes should be unique
-            return _.filter(data.matches, (recipe) => {
-                return (dbIds.indexOf(recipe.id) === -1);
-            });
-        }).then((newRecipes) => {
-            const recipesToInsert = newRecipes.map((recipe) => {
-                return {yummly_id: recipe.id, data: recipe};
-            });
-
-            return db.insert(recipesToInsert).into('recipes');
-        }).then(() => {
-
-            // TODO: merge data from the db and the data from the API call together in some meaningful way
-            return data;
-        });
-    });
+    } else {
+        return recipe.Collection.query((query) => {
+            query.limit(30).orderByRaw('RANDOM()');
+        }).fetch();
+    }
 };
 
 /* ********* route initialization ********* */
 
 router.get('/stream', (req, res, next) => {
     getRecipeStream({
-        queryParams: _.omit(req.query, 'api_token')
-    }).then((data) => {
-        res.status(200).send({
-            status: 'success',
-            stream: data.matches
-        });
+        forceNew: req.query.forceNew,
+        maxResults: req.query.maxResults,
+        offset: req.query.offset
+    }).then((recipes) => {
+        res.status(200).send(recipes.toJSON({status: 'success'}));
     }).catch(() => {
-        res.status(400).send({
+        res.status(403).send({
             status: 'failure',
             error: 'Unable to retrieve featured recipes'
         });

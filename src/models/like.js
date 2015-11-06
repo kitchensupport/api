@@ -1,7 +1,7 @@
 import bookshelf from '../utils/database';
 import model from '../utils/model';
 import {Model as User} from './user';
-import Recipe from './recipe';
+import {Model as Recipe} from './recipe';
 
 model('likes', (schema) => {
     schema.increments('id').primary();

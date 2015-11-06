@@ -22,7 +22,8 @@ likes.get((req, res, next) => {
                 status: 'success',
                 likes: user.related('likes').toJSON()
             });
-        }).catch(() => {
+        }).catch((err) => {
+            console.error(err);
             res.status(403).send({
                 status: 'failure',
                 error: 'Unable to retrieve this user\'s likes'

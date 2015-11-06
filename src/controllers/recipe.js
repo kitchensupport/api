@@ -1,5 +1,7 @@
 import express from 'express';
-import yummly from '../utils/yummly';
+import _ from 'lodash';
+import * as yummly from '../utils/yummly';
+import * as recipe from '../models/recipe';
 
 const router = express();
 
@@ -7,21 +9,49 @@ export function routes() {
     return router;
 };
 
+export function search({forceNew = false, searchTerm, maxResult = 30, offset = 0}) {
+    if (forceNew) {
+        return yummly.get({
+            path: '/recipes',
+            queryParams: {
+                q: searchTerm,
+                maxResult,
+                offset
+            }
+        }).then((data) => {
+            return yummly.cacheMany(data.matches);
+        });
+    } else {
+        return recipe.Collection.query((query) => {
+            query.whereRaw(`data ->> 'recipeName' ilike ?`, [`%${searchTerm}%`]).limit(maxResult);
+        }).fetch().then((collection) => {
+            return collection;
+        });
+    }
+
+};
+
+export function getRecipe({id, yummlyId}) {
+    if (id) {
+        return recipe.Model.where({id}).fetch();
+    } else {
+        return recipe.Model.where({yummly_id: yummlyId}).fetch();
+    }
+
+};
+
 /* ********* route initialization ********* */
 
 router.get('/recipes/search/:searchTerm', (req, res, next) => {
-    yummly({
-        path: '/recipes',
-        queryParams: {
-            q: req.params.searchTerm
-        }
-    }).then((data) => {
-        res.status(200).send({
-            status: 'success',
-            data
-        });
+    search({
+        forceNew: req.query.forceNew,
+        searchTerm: req.params.searchTerm,
+        maxResult: req.query.maxResult,
+        offset: req.query.offset
+    }).then((recipes) => {
+        res.status(200).send(recipes.toJSON({status: 'success'}));
     }).catch(() => {
-        res.status(400).send({
+        res.status(404).send({
             status: 'failure',
             error: 'Unable to search for recipes'
         });
@@ -30,15 +60,16 @@ router.get('/recipes/search/:searchTerm', (req, res, next) => {
     });
 });
 
-router.get('/recipe/:recipeId', (req, res, next) => {
-    yummly({
-        path: `recipe/${req.params.recipeId}`
-    }).then((data) => {
-        res.status(200).send({
-            status: 'success',
-            data
-        });
-    }).catch(() => {
+router.get('/recipe', (req, res, next) => {
+    getRecipe({
+        id: req.query.id,
+        yummlyId: req.query.yummly_id
+    }).then((recipes) => {
+        res.status(200).send(_.defaults({}, recipes.toJSON(), {
+            status: 'success'
+        }));
+    }).catch((err) => {
+        console.error(err);
         res.status(400).send({
             status: 'failure',
             error: 'Unable to retrieve recipe'

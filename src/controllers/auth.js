@@ -51,7 +51,7 @@ export function createUser(attrs) {
                 return new User.Model({email, password: hash, facebook_token: facebookToken, api_token: token}).save();
             }).then((user) => {
                 if (user) {
-                    resolve(user.toJSON());
+                    resolve(user);
                 } else {
                     reject(new Error('The user could not be saved'));
                 }
@@ -102,9 +102,7 @@ export function getUser(attrs) {
     return new Promise((resolve, reject) => {
         User.Model.where(attrs)
             .fetch()
-            .then((user) => {
-                resolve(user.toJSON());
-            })
+            .then(resolve)
             .catch(reject);
     });
 };
@@ -131,16 +129,12 @@ export function logUserIn(attrs) {
                         return reject(new Error('No user found with that email'));
                     }
                 })
-                .then((user) => {
-                    resolve(user.toJSON());
-                })
+                .then(resolve)
                 .catch(reject);
         } else {
             User.Model.where({facebook_token: facebookToken})
                 .fetch()
-                .then((user) => {
-                    resolve(user.toJSON());
-                })
+                .then(resolve)
                 .catch(reject);
         }
     });
@@ -207,10 +201,7 @@ router.post('/accounts/create', (req, res, next) => {
     getAttributes(req.body, true)
         .then(createUser)
         .then((user) => {
-            res.status(200).send({
-                status: 'success',
-                user
-            });
+            res.status(200).send(user.toJSON({status: 'success'}));
         }).catch((err) => {
             res.status(400).send({
                 status: 'failure',
@@ -225,10 +216,7 @@ router.post('/accounts/login', (req, res, next) => {
     getAttributes(req.body)
         .then(logUserIn)
         .then((user) => {
-            res.status(200).send({
-                status: 'success',
-                user
-            });
+            res.status(200).send(user.toJSON({status: 'success'}));
         }).catch((err) => {
             res.status(400).send({
                 status: 'failure',
@@ -242,10 +230,7 @@ router.post('/accounts/login', (req, res, next) => {
 router.get('/account', (req, res, next) => {
     getUser({api_token: req.query.api_token})
         .then((user) => {
-            res.status(200).send({
-                status: 'success',
-                user
-            });
+            res.status(200).send(user.toJSON({status: 'success'}));
         }).catch((err) => {
             res.status(401).send({
                 status: 'failure',
