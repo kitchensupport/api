@@ -10,7 +10,7 @@ model('recipes', (schema) => {
 
 export const Model = bookshelf.Model.extend({
     tableName: 'recipes',
-    serialize({additional = {}}) {
+    serialize(additional = {}) {
         const data = this.get('data');
         const id = this.get('id');
 
@@ -25,7 +25,7 @@ export const Model = bookshelf.Model.extend({
 
 export const Collection = bookshelf.Collection.extend({
     model: Model,
-    serialize(additional) {
+    serialize(additional = {}) {
         return _.defaults({
             matches: this.size(),
             recipes: this.toArray()
