@@ -9,8 +9,8 @@ model('user_recipe', (schema) => {
     schema.integer('recipe_id').references('id').inTable('recipes').notNullable();
     schema.unique(['user_id', 'recipe_id']);
     schema.boolean('liked');
-    schema.boolean('favorited');
-    schema.boolean('made');
+    schema.boolean('favorited').defaultTo(false).notNullable();
+    schema.boolean('made').defaultTo(false).notNullable();
 });
 
 export const Model = bookshelf.Model.extend({

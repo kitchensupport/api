@@ -43,7 +43,7 @@ favorites.post((req, res, next) => {
         userId: req.user.id,
         recipeId: req.body.recipe_id,
         action: 'favorited',
-        value: req.body.value
+        value: true
     }).then(() => {
         res.status(200).send({
             status: 'success'
@@ -63,7 +63,7 @@ favorites.delete((req, res, next) => {
         userId: req.user.id,
         recipeId: req.body.recipe_id,
         action: 'favorited',
-        value: null
+        value: false
     }).then(() => {
         res.status(200).send({
             status: 'success'
