@@ -31,7 +31,21 @@ const Model = bookshelf.Model.extend({
     },
 
     likes() {
-        return this.belongsToMany(Recipe, 'likes', 'user_id', 'recipe_id');
+        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
+            query.where({liked: true});
+        });
+    },
+
+    favorites() {
+        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
+            query.where({favorited: true});
+        });
+    },
+
+    made() {
+        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
+            query.where({made: true});
+        });
     },
 
     serialize(additional) {
