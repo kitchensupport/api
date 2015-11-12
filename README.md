@@ -129,8 +129,8 @@ GET http://api.kitchen.support/stream
 ```
 
 **Arguments**
-- `maxResult`: The number of recipes to return, 30 by default.
-- `offset`: The offset in the list to return. Similar to the idea of "paging". [**UNIMPLEMENTED**]
+- `limit`: The number of recipes to return, `30` by default.
+- `offset`: The offset in the list to return. Similar to the idea of "paging". *Note* - the recipe stream is, as it stands today, completely non-deterministic without `forceNew` set. So, while offset is technically implemented even when `forceNew` is `false`, it only has a meaningful effect when used in conjunction with `forceNew`. `0` by default.
 - `forceNew`: If `forceNew` is set to `true`, the API will call out to Yummly first to get relevant recipes, cache them, and then return the result. This call takes significantly longer with `forceNew` set, and as such it's use is discouraged except to build out the database.
 
 **Return**: Returns an array of recipe objects.
@@ -154,18 +154,11 @@ GET http://api.kitchen.support/recipes/search/:searchTerm
 
 **Arguments**
 - `searchTerm`: Any term to search the Yummly API for.
+- `limit`: the number of recipes to return, `30` by default.
+- `offset`: the offset of recipes to return, similar to the concept of "paging". `0` by default.
 - `forceNew`: If `forceNew` is set to `true`, the API will call out to Yummly first to get the day's featured recipes, cache them, and then return the result. This call takes significantly longer with `forceNew` set, and as such it's use is discouraged except to build out the database.
 
 ### Liking recipes
-#### Get a user's liked recipes
-**Definition**
-```
-GET http://api.kitchen.support/likes
-```
-
-**Arguments**
-- `api_token`: A valid API token.
-
 #### Like a recipe
 **Definition**
 ```
@@ -175,13 +168,68 @@ POST http://api.kitchen.support/likes
 **Arguments**
 - `api_token`: A valid API token.
 - `recipe_id`: The `id` of the recipe being liked.
+- `value`: a `boolean` or `null`, describing the state of the liking relationship. `true` corresponds to liking a recipe, `false` corresponds to disliking a recipe, and `null` corresponds to being neutral or un-liking/un-disliking.
 
-#### Stop liking a recipe
+### Favoriting recipes
+#### Get all favorited recipes
 **Definition**
 ```
-DELETE http://api.kitchen.support/likes
+GET http://api.kitchen.support/favorites
 ```
 
 **Arguments**
 - `api_token`: A valid API token.
-- `recipe_id`: The `id` of the recipe being un-liked.
+- `limit`: the number of recipes to return, `30` by default.
+- `offset`: the offset of recipes to return, similar to the concept of "paging". `0` by default.
+
+#### Favorite a recipe
+**Definition**
+```
+POST http://api.kitchen.support/favorites
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `recipe_id`: The `id` of the recipe being favorited.
+
+#### Un-favorite a recipe
+**Definition**
+```
+DELETE http://api.kitchen.support/favorites
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `recipe_id`: The `id` of the recipe being un-favorited.
+
+### Completing recipes
+#### Get all completed recipes
+**Definition**
+```
+GET http://api.kitchen.support/completed
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `limit`: the number of recipes to return, `30` by default.
+- `offset`: the offset of recipes to return, similar to the concept of "paging". `0` by default.
+
+#### Favorite a recipe
+**Definition**
+```
+POST http://api.kitchen.support/completed
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `recipe_id`: The `id` of the recipe being completed.
+
+#### Un-favorite a recipe
+**Definition**
+```
+DELETE http://api.kitchen.support/completed
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `recipe_id`: The `id` of the recipe being un-completed.

@@ -7,6 +7,8 @@ import {routes as authRouter} from './src/controllers/auth';
 import {routes as recipeRouter} from './src/controllers/recipe';
 import {routes as likesRouter} from './src/controllers/likes';
 import {routes as streamRouter} from './src/controllers/stream';
+import {routes as favoritesRouter} from './src/controllers/favorites';
+import {routes as completedRouter} from './src/controllers/completed';
 
 const app = express();
 
@@ -21,6 +23,8 @@ app.use(authRouter());
 app.use(recipeRouter());
 app.use(likesRouter());
 app.use(streamRouter());
+app.use(favoritesRouter());
+app.use(completedRouter());
 
 app.get('/protected', authorize(), (req, res) => {
     res.status(200);
