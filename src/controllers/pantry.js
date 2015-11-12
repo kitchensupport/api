@@ -32,8 +32,9 @@ export function newPantryItem({userId, ingredientId}) {
 
 /* ********* route initialization ********* */
 
-router.use(authorize());
 const pantry = router.route('/pantry');
+
+pantry.all(authorize());
 
 pantry.get((req, res, next) => {
     const {limit = 30, offset = 0} = req.query;
