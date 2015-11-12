@@ -36,8 +36,7 @@ favorites.get((req, res, next) => {
             limit,
             offset
         }));
-    }).catch((err) => {
-        console.error(err);
+    }).catch(() => {
         res.status(403).send({
             status: 'failure',
             error: 'Unable to retrieve favorited recipes'
