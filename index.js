@@ -6,11 +6,14 @@ require('babel/register');
 // work harder
 const cluster = require('cluster');
 const os = require('os');
-const server = require('./server');
 
 const cores = os.cpus().length;
 const port = process.env.PORT || 8000;
 const production = process.env.NODE_ENV === 'production';
+const args = process.argv.slice(2);
+
+// set up process defaults
+process.env.PGSSLMODE = 'require';
 
 if (cluster.isMaster && false) {
     for (let i = 0; i < cores; i++) {
@@ -26,5 +29,9 @@ if (cluster.isMaster && false) {
         cluster.fork();
     });
 } else {
-    server.listen(port);
+    if (args.length > 0 && args[0] === '-r') {
+        require(args[1]);
+    } else {
+        require('./server').listen(port);
+    }
 }
