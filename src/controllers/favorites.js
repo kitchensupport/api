@@ -9,26 +9,35 @@ export function routes() {
     return router;
 };
 
+export function getFavorites({id}) {
+    return UserRecipeCollection.query((query) => {
+        query.where({
+            user_id: id,
+            favorited: true
+        }).orderBy('id');
+    }).fetch({withRelated: ['recipe']}).then((urs) => {
+        return new RecipeCollection(urs.map((ur) => {
+            return ur.related('recipe');
+        }));
+    });
+};
+
 /* ********* route initialization ********* */
 
 router.use(authorize());
 const favorites = router.route('/favorites');
 
 favorites.get((req, res, next) => {
-    UserRecipeCollection.query((query) => {
-        query.where({
-            user_id: req.user.id,
-            favorited: true
-        }).limit(req.query.limit || 30)
-        .offset(req.query.offset || 0)
-        .orderBy('id');
-    }).fetch({withRelated: ['recipe']}).then((urs) => {
-        res.status(200).send(new RecipeCollection(urs.map((ur) => {
-            return ur.related('recipe');
-        })).toJSON({
-            status: 'success'
+    const {limit = 30, offset = 0} = req.query;
+
+    getFavorites({id: req.user.id}).then((recipes) => {
+        res.status(200).send(recipes.toJSON({
+            status: 'success',
+            limit,
+            offset
         }));
-    }).catch(() => {
+    }).catch((err) => {
+        console.error(err);
         res.status(403).send({
             status: 'failure',
             error: 'Unable to retrieve favorited recipes'
@@ -71,9 +80,9 @@ favorites.delete((req, res, next) => {
     }).catch(() => {
         res.status(403).send({
             status: 'failure',
-            error: 'Can not favorite this recipe'
+            error: 'Can not un-favorite this recipe'
         });
 
-        next(new Error(`User ${req.user.id} can not delete favorited recipe ${req.body.recipe_id}`));
+        next(new Error(`User ${req.user.id} can not un-favorite recipe ${req.body.recipe_id}`));
     });
 });

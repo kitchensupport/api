@@ -10,18 +10,14 @@ model('recipes', (schema) => {
 
 export const Model = bookshelf.Model.extend({
     tableName: 'recipes',
-    serialize(additional) {
+    serialize({status = 'success'}) {
         const data = this.get('data');
         const id = this.get('id');
 
         data.yummly_id = data.id;
         data.id = id;
 
-        if (additional) {
-            return data;
-        } else {
-            return _.assign(data, additional);
-        }
+        return _.assign(data, {status});
     }
 
     // TODO: implement central store to store models so we can have a cyclic relationship
@@ -29,10 +25,11 @@ export const Model = bookshelf.Model.extend({
 
 export const Collection = bookshelf.Collection.extend({
     model: Model,
-    serialize(additional = {}) {
-        return _.defaults({
+    serialize({status = 'success', limit = this.size(), offset = 0}) {
+        return {
+            status,
             matches: this.size(),
-            recipes: this.toArray()
-        }, additional);
+            recipes: this.slice(offset, offset + limit)
+        };
     }
 });

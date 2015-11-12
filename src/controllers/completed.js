@@ -9,24 +9,32 @@ export function routes() {
     return router;
 };
 
+export function getCompleted({id}) {
+    return UserRecipeCollection.query((query) => {
+        query.where({
+            user_id: id,
+            made: true
+        }).orderBy('id');
+    }).fetch({withRelated: ['recipe']}).then((urs) => {
+        return new RecipeCollection(urs.map((ur) => {
+            return ur.related('recipe');
+        }));
+    });
+};
+
 /* ********* route initialization ********* */
 
 router.use(authorize());
 const completed = router.route('/completed');
 
 completed.get((req, res, next) => {
-    UserRecipeCollection.query((query) => {
-        query.where({
-            user_id: req.user.id,
-            made: true
-        }).limit(req.query.limit || 30)
-        .offset(req.query.offset || 0)
-        .orderBy('id');
-    }).fetch({withRelated: ['recipe']}).then((urs) => {
-        res.status(200).send(new RecipeCollection(urs.map((ur) => {
-            return ur.related('recipe');
-        })).toJSON({
-            status: 'success'
+    const {limit = 30, offset = 0} = req.query;
+
+    getCompleted({id: req.user.id}).then((recipes) => {
+        res.status(200).send(recipes.toJSON({
+            status: 'success',
+            limit,
+            offset
         }));
     }).catch(() => {
         res.status(403).send({
@@ -51,10 +59,10 @@ completed.post((req, res, next) => {
     }).catch(() => {
         res.status(403).send({
             status: 'failure',
-            error: 'Can not favorite this recipe'
+            error: 'Can not mark recipe as complete'
         });
 
-        next(new Error(`User ${req.user.id} can not favorite recipe ${req.body.recipe_id}`));
+        next(new Error(`User ${req.user.id} can not mark recipe ${req.body.recipe_id} as completed`));
     });
 });
 
@@ -71,9 +79,9 @@ completed.delete((req, res, next) => {
     }).catch(() => {
         res.status(403).send({
             status: 'failure',
-            error: 'Can not favorite this recipe'
+            error: 'Can not mark recipe as incomplete'
         });
 
-        next(new Error(`User ${req.user.id} can not delete favorited recipe ${req.body.recipe_id}`));
+        next(new Error(`User ${req.user.id} can not mark recipe ${req.body.recipe_id} as incomplete`));
     });
 });
