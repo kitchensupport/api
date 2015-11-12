@@ -9,6 +9,7 @@ export default function authorize() {
         const token = req.query.api_token || req.body.api_token;
 
         if (!token) {
+            res.status(401).send({status: 'failure', error: 'Unauthorized'});
             return next(new Error('Unauthorized'));
         }
 
@@ -16,6 +17,7 @@ export default function authorize() {
             req.user = user.omit('password');
             next();
         }).catch((error) => {
+            res.status(401).send({status: 'failure', error: 'Unauthorized'});
             next(error);
         });
     };

@@ -24,8 +24,9 @@ export function getFavorites({id}) {
 
 /* ********* route initialization ********* */
 
-router.use(authorize());
 const favorites = router.route('/favorites');
+
+favorites.all(authorize());
 
 favorites.get((req, res, next) => {
     const {limit = 30, offset = 0} = req.query;
@@ -36,8 +37,7 @@ favorites.get((req, res, next) => {
             limit,
             offset
         }));
-    }).catch((err) => {
-        console.error(err);
+    }).catch(() => {
         res.status(403).send({
             status: 'failure',
             error: 'Unable to retrieve favorited recipes'

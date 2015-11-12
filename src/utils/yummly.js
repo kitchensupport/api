@@ -82,10 +82,11 @@ export function get(params) {
                 return reject(response);
             }
 
+            // WARNING: this jsonp implementation is specific to ingredients
             if (jsonp) {
-                const jsonStart = resBody.indexOf('({');
-                const jsonEnd = resBody.indexOf('})');
-                const json = JSON.parse(resBody.substring(jsonStart + 1, jsonEnd + 1));
+                const jsonStart = resBody.indexOf('[{');
+                const jsonEnd = resBody.indexOf('}])');
+                const json = JSON.parse(resBody.substring(jsonStart, jsonEnd + 2));
 
                 resolve(json);
             } else {

@@ -24,8 +24,9 @@ export function getCompleted({id}) {
 
 /* ********* route initialization ********* */
 
-router.use(authorize());
 const completed = router.route('/completed');
+
+completed.all(authorize());
 
 completed.get((req, res, next) => {
     const {limit = 30, offset = 0} = req.query;
