@@ -233,3 +233,46 @@ DELETE http://api.kitchen.support/completed
 **Arguments**
 - `api_token`: A valid API token.
 - `recipe_id`: The `id` of the recipe being un-completed.
+
+### Ingredients
+#### Getting all ingredients
+**Definition**
+```
+GET http://api.kitchen.support/ingredients
+```
+
+**Arguments**
+- `limit`: the number of ingredients to return, `30` by default.
+- `offset`: the offset of ingredients to return, similar to the concept of "paging". `0` by default.
+
+### Pantry
+#### Get a user's pantry
+**Definition**
+```
+GET http://api.kitchen.support/pantry
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `limit`: the number of ingredients to return, `30` by default.
+- `offset`: the offset of ingredients to return, similar to the concept of "paging". `0` by default.
+
+#### Add an item to the user's pantry
+**Definition**
+```
+POST http://api.kitchen.support/pantry
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `ingredient_id`: the ID of the ingredient being added.
+
+#### Remove an item from the user's pantry
+**Definition**
+```
+DELETE http://api.kitchen.support/pantry
+```
+
+**Arguments**
+- `api_token`: A valid API token.
+- `ingredient_id`: the ID of the ingredient being removed.
