@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 // CORS is hard
-app.use(cors({methods: ['GET', 'POST', 'PUT', 'DELETE']}));
+app.use(cors());
 app.options('*', cors());
 
 // controllers
