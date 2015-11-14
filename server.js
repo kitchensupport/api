@@ -15,10 +15,13 @@ import {routes as pantryRouter} from './src/controllers/pantry';
 const app = express();
 
 // middleware
-app.use(cors());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'short' : 'dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+
+// CORS is hard
+app.use(cors({methods: ["GET", "POST", "PUT", "DELETE"]}));
+app.options('*', cors());
 
 // controllers
 app.use(authRouter());
