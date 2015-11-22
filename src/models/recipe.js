@@ -1,31 +1,55 @@
 import _ from 'lodash';
 import bookshelf from '../utils/database';
-import model from '../utils/model';
+import makeTable from '../utils/make-table';
 
-model('recipes', (schema) => {
-    schema.increments('id').primary();
-    schema.string('yummly_id').unique();
-    schema.json('data', true).notNullable();
-});
-
-export const Model = bookshelf.Model.extend({
+const Model = bookshelf.Model.extend({
     tableName: 'recipes',
-    serialize({status = 'success'}) {
+    userRecipes() {
+        return this.hasMany(bookshelf.model('UserRecipe'), 'recipe_id');
+    },
+    serialize(additional = {}) {
         const data = this.get('data');
+        const yummlyId = data.id;
         const id = this.get('id');
+        const userId = additional.user_id;
+        const related = this.related('userRecipes');
+        let likes = 0;
+        let favorites = 0;
+        let completions = 0;
+        let liked = null;
+        let favorited = false;
+        let completed = false;
 
-        data.yummly_id = data.id;
-        data.id = id;
+        related.each((ur) => {
+            if (userId === ur.user_id) {
+                liked = ur.liked;
+                favorited = ur.favorited;
+                completed = ur.made;
+            }
 
-        return _.assign(data, {status});
+            if (ur.liked === true) { likes++; }
+            if (ur.favorited === true) { favorites++; }
+            if (ur.made === true) { completions++; }
+        });
+
+        return _.assign(data, {
+            yummly_id: yummlyId,
+            id,
+            likes,
+            favorites,
+            completions,
+            liked,
+            favorited,
+            completed
+        }, additional);
     }
-
-    // TODO: implement central store to store models so we can have a cyclic relationship
 });
 
-export const Collection = bookshelf.Collection.extend({
+const Collection = bookshelf.Collection.extend({
     model: Model,
-    serialize({status = 'success', limit = this.size(), offset = 0}) {
+    serialize(additional = {}) {
+        const {status, limit = this.size(), offset = 0} = additional;
+
         return {
             status,
             matches: this.size(),
@@ -33,3 +57,14 @@ export const Collection = bookshelf.Collection.extend({
         };
     }
 });
+
+export default function initialize() {
+    makeTable('recipes', (schema) => {
+        schema.increments('id').primary();
+        schema.string('yummly_id').unique();
+        schema.json('data', true).notNullable();
+    });
+
+    bookshelf.model('Recipe', Model);
+    bookshelf.collection('Recipe', Collection);
+};

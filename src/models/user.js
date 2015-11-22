@@ -1,26 +1,39 @@
 import bcrypt from 'bcrypt';
 import _ from 'lodash';
-import {Model as Recipe} from './recipe';
+import Bluebird from 'bluebird';
 import bookshelf from '../utils/database';
-import model from '../utils/model';
+import makeTable from '../utils/make-table';
+import getModels from '../utils/get-models';
 
-model('users', (schema) => {
-    schema.increments('id').primary();
-    schema.string('email').unique();
-    schema.string('password');
-    schema.string('facebook_token').unique();
-    schema.string('api_token').unique();
-    schema.timestamps();
-});
+const [Recipe] = getModels('Recipe');
 
 const Model = bookshelf.Model.extend({
     tableName: 'users',
-
     hasTimestamps: true,
+    likes() {
+        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
+            query.where({liked: true});
+        });
+    },
+    favorites() {
+        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
+            query.where({favorited: true});
+        });
+    },
+    made() {
+        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
+            query.where({made: true});
+        });
+    },
+    serialize(additional = {}) {
+        const data = this.omit('password');
 
+        return _.assign(data, additional);
+    }
+}, {
     checkPassword(password) {
-        return new Promise((resolve, reject) => {
-            bcrypt.compare(password, this.attributes.password, (error, result) => {
+        return new Bluebird((resolve, reject) => {
+            bcrypt.compare(password, this.get('password'), (error, result) => {
                 if (error || !result) {
                     return reject(new Error('Passwords do not match'));
                 } else {
@@ -29,43 +42,33 @@ const Model = bookshelf.Model.extend({
             });
         });
     },
+    hashPassword(password) {
+        return new Bluebird((resolve, reject) => {
+            bcrypt.hash(password, 10, (error, hash) => {
+                if (error) {
+                    return reject(error);
+                }
 
-    likes() {
-        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
-            query.where({liked: true});
+                return resolve(hash);
+            });
         });
-    },
-
-    favorites() {
-        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
-            query.where({favorited: true});
-        });
-    },
-
-    made() {
-        return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
-            query.where({made: true});
-        });
-    },
-
-    serialize(additional) {
-        return _.defaults(this.omit('password'), additional);
     }
 });
 
-function hashPassword(password) {
-    return new Promise((resolve, reject) => {
-        bcrypt.hash(password, 10, (error, hash) => {
-            if (error) {
-                return reject(error);
-            }
+const Collection = bookshelf.Collection.extend({
+    model: Model
+});
 
-            return resolve(hash);
-        });
+export default function initialize() {
+    makeTable('users', (schema) => {
+        schema.increments('id').primary();
+        schema.string('email').unique();
+        schema.string('password');
+        schema.string('facebook_token').unique();
+        schema.string('api_token').unique();
+        schema.timestamps();
     });
-};
 
-export default {
-    Model,
-    hashPassword
+    bookshelf.model('User', Model);
+    bookshelf.collection('Users', Collection);
 };

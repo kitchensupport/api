@@ -1,21 +1,11 @@
 import bookshelf from '../utils/database';
-import model from '../utils/model';
-import {Model as Ingredient} from './ingredient';
+import makeTable from '../utils/make-table';
 
-model('pantry', (schema) => {
-    schema.increments('id').primary();
-    schema.integer('user_id').references('id').inTable('users').notNullable();
-    schema.integer('ingredient_id').references('id').inTable('ingredients').notNullable();
-    schema.unique(['user_id', 'ingredient_id']);
-    schema.boolean('active').notNullable().defaultTo(true);
-    schema.timestamps();
-});
-
-export const Model = bookshelf.Model.extend({
+const Model = bookshelf.Model.extend({
     tableName: 'pantry',
     hasTimestamps: true,
     ingredient() {
-        return this.belongsTo(Ingredient, 'ingredient_id');
+        return this.belongsTo(bookshelf.model('Ingredient'), 'ingredient_id');
     },
     serialize() {
         const ingredient = this.related('ingredient').toJSON();
@@ -26,9 +16,11 @@ export const Model = bookshelf.Model.extend({
     }
 });
 
-export const Collection = bookshelf.Collection.extend({
+const Collection = bookshelf.Collection.extend({
     model: Model,
-    serialize({status, offset = 0, limit = this.size()}) {
+    serialize(additional = {}) {
+        const {status, limit = this.size(), offset = 0} = additional;
+
         return {
             status,
             matches: this.size(),
@@ -36,3 +28,17 @@ export const Collection = bookshelf.Collection.extend({
         };
     }
 });
+
+export default function initialize() {
+    makeTable('pantry', (schema) => {
+        schema.increments('id').primary();
+        schema.integer('user_id').references('id').inTable('users').notNullable();
+        schema.integer('ingredient_id').references('id').inTable('ingredients').notNullable();
+        schema.unique(['user_id', 'ingredient_id']);
+        schema.boolean('active').notNullable().defaultTo(true);
+        schema.timestamps();
+    });
+
+    bookshelf.model('PantryItem', Model);
+    bookshelf.collection('Pantry', Collection);
+}
