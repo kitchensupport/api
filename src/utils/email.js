@@ -6,7 +6,7 @@ const transport = mailer.createTransport(mandrill({
     auth: {apiKey}
 }));
 
-export function send(params) {
+export default function send(params) {
     return new Promise((resolve, reject) => {
         transport.sendMail({
             from: fromEmail,
