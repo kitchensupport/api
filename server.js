@@ -12,6 +12,9 @@ import {routes as completedRouter} from './src/controllers/completed';
 import {routes as ingredientsRouter} from './src/controllers/ingredients';
 import {routes as pantryRouter} from './src/controllers/pantry';
 
+// initialize models
+import './src/models';
+
 const app = express();
 
 // CORS is hard

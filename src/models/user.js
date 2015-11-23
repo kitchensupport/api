@@ -11,12 +11,12 @@ const bcryptHash = Bluebird.promisify(bcrypt.hash);
 
 const hashPassword = Bluebird.method((model, attrs) => {
     if (!model.has('password') || !attrs.password) {
-        throw new Error('A password must be provided');
+        return model;
     }
 
     return bcryptHash(attrs.password, 10).then((hash) => {
         model.set('password', hash);
-        return hash;
+        return model;
     }).catch(() => {
         return new Error('Could not hash password');
     });
@@ -26,7 +26,7 @@ const Model = bookshelf.Model.extend({
     tableName: 'users',
     hasTimestamps: true,
     initialize() {
-        this.on('creating', hashPassword, this);
+        this.on('creating fetching', hashPassword, this);
     },
     likes() {
         return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {

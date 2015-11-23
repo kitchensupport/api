@@ -1,40 +1,12 @@
 import express from 'express';
-import * as yummly from '../utils/yummly';
-import * as recipe from '../models/recipe';
+import * as get from '../utils/get-models';
 
+const [Recipe] = get.models('Recipe');
+const [Recipes] = get.collections('Recipes');
 const router = express();
 
 export function routes() {
     return router;
-};
-
-export function search({forceNew = false, searchTerm, limit = 30, offset = 0}) {
-    if (forceNew) {
-        return yummly.get({
-            path: '/recipes',
-            queryParams: {
-                q: searchTerm,
-                maxResult: limit,
-                start: offset
-            }
-        }).then((data) => {
-            return yummly.cacheMany(data.matches);
-        });
-    } else {
-        return recipe.Collection.query((query) => {
-            query.whereRaw(`data ->> 'recipeName' ILIKE ?`, [`%${searchTerm}%`]);
-        }).fetch();
-    }
-
-};
-
-export function getRecipe({id, yummlyId}) {
-    if (id) {
-        return recipe.Model.where({id}).fetch();
-    } else {
-        return recipe.Model.where({yummly_id: yummlyId}).fetch();
-    }
-
 };
 
 /* ********* route initialization ********* */
@@ -42,7 +14,7 @@ export function getRecipe({id, yummlyId}) {
 router.get('/recipes/search/:searchTerm', (req, res, next) => {
     const {forceNew = false, limit = 30, offset = 0} = req.query;
 
-    search({forceNew, limit, offset, searchTerm: req.params.searchTerm}).then((recipes) => {
+    Recipes.getRecipes({forceNew, limit, offset, searchTerm: req.params.searchTerm}).then((recipes) => {
         res.status(200).send(recipes.toJSON({
             status: 'success',
             limit,
@@ -59,10 +31,7 @@ router.get('/recipes/search/:searchTerm', (req, res, next) => {
 });
 
 router.get('/recipe', (req, res, next) => {
-    getRecipe({
-        id: req.query.id,
-        yummlyId: req.query.yummly_id
-    }).then((recipes) => {
+    Recipe.getRecipe(req.query).then((recipes) => {
         res.status(200).send(recipes.toJSON({
             status: 'success'
         }));

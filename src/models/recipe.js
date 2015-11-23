@@ -1,11 +1,19 @@
 import _ from 'lodash';
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
+import * as get from '../utils/get-models';
+
+const [UserRecipe] = get.models('UserRecipe');
 
 const Model = bookshelf.Model.extend({
     tableName: 'recipes',
+    initialize() {
+        this.on('fetching saved', (model) => {
+            return model.load('userRecipes');
+        });
+    },
     userRecipes() {
-        return this.hasMany(bookshelf.model('UserRecipe'), 'recipe_id');
+        return this.hasMany(UserRecipe, 'recipe_id');
     },
     serialize(additional = {}) {
         const data = this.get('data');
@@ -43,6 +51,14 @@ const Model = bookshelf.Model.extend({
             completed
         }, additional);
     }
+}, {
+    getRecipe({id, yummlyId} = {}) {
+        if (id) {
+            return Model.where({id}).fetch();
+        } else {
+            return Model.where({yummly_id: yummlyId}).fetch();
+        }
+    }
 });
 
 const Collection = bookshelf.Collection.extend({
@@ -56,7 +72,60 @@ const Collection = bookshelf.Collection.extend({
             recipes: this.slice(offset, offset + limit)
         };
     }
+}, {
+    getRecipes({forceNew = false, searchTerm, offset = 0, limit = 30} = {}) {
+        if (forceNew) {
+            const queryParams = {start: offset, maxRecipes: limit};
+
+            if (searchTerm) {
+                queryParams.q = searchTerm;
+            }
+
+            return yummly({
+                path: '/recipes',
+                queryParams
+            }).then((data) => {
+                return cacheMany(data.matches);
+            });
+        } else if (searchTerm) {
+            return new Collection().query((query) => {
+                query.whereRaw(`data ->> 'recipeName' ILIKE ?`, [`%${searchTerm}%`]);
+            }).fetch();
+        } else {
+            return new Collection().fetch().then((collection) => {
+                return collection.suffle();
+            });
+        }
+    }
 });
+
+function cacheMany(yummlyRecipes) {
+    return Collection.query((query) => {
+        query.whereIn('yummly_id', yummlyRecipes.map((recipe) => {
+            return recipe.id;
+        }));
+    }).fetch().then((collection) => {
+
+        // get figure out which recipes in yummlyRecipes have already been saved in our db
+        const dbIds = collection.map((dbEntry) => {
+            return dbEntry.get('yummly_id');
+        });
+
+        // we only want to insert recipes that arent in the database yet, since recipes should be unique
+        const newRecipes = _.filter(yummlyRecipes, (recipe) => {
+            return (dbIds.indexOf(recipe.id) === -1);
+        });
+
+        // save the new recipes
+        return collection.add(newRecipes.map((recipe) => {
+            return new Recipe({yummly_id: recipe.id, data: recipe});
+        })).invokeThen('save').then(() => {
+            return collection;
+        });
+    }).catch(() => {
+        return new Error('Could not cache recipes');
+    });
+}
 
 export default function initialize() {
     makeTable('recipes', (schema) => {
