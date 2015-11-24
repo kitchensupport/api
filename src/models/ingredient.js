@@ -1,8 +1,16 @@
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
+import * as get from '../utils/get-models';
+
+const [Recipes] = get.collections('Recipes');
 
 const Model = bookshelf.Model.extend({
-    tableName: 'ingredients'
+    tableName: 'ingredients',
+    recipes() {
+        return Recipes.query((query) => {
+            query.whereRaw(`data -> 'ingredients' @> ?`, [JSON.stringify([this.searchTerm])]);
+        }).fetch();
+    }
 });
 
 const Collection = bookshelf.Collection.extend({

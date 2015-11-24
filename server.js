@@ -5,10 +5,8 @@ import morgan from 'morgan';
 import authorize from './src/middleware/auth';
 import {routes as authRouter} from './src/controllers/auth';
 import {routes as recipeRouter} from './src/controllers/recipe';
-import {routes as likesRouter} from './src/controllers/likes';
+import {routes as userRecipesRouter} from './src/controllers/user-recipes';
 import {routes as streamRouter} from './src/controllers/stream';
-import {routes as favoritesRouter} from './src/controllers/favorites';
-import {routes as completedRouter} from './src/controllers/completed';
 import {routes as ingredientsRouter} from './src/controllers/ingredients';
 import {routes as pantryRouter} from './src/controllers/pantry';
 
@@ -29,10 +27,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 // controllers
 app.use(authRouter());
 app.use(recipeRouter());
-app.use(likesRouter());
+app.use(userRecipesRouter());
 app.use(streamRouter());
-app.use(favoritesRouter());
-app.use(completedRouter());
 app.use(ingredientsRouter());
 app.use(pantryRouter());
 

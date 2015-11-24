@@ -1,7 +1,7 @@
 import express from 'express';
 import * as get from '../utils/get-models';
 
-
+const [Recipes] = get.collections('Recipes');
 const router = express();
 
 export function routes() {
@@ -22,9 +22,9 @@ router.get('/stream', (req, res, next) => {
     }).catch(() => {
         res.status(403).send({
             status: 'failure',
-            error: 'Unable to retrieve featured recipes'
+            error: 'Unable to retrieve recipe stream'
         });
 
-        next(new Error('Unable to retrieve featured recipes'));
+        next(new Error('Unable to retrieve recipe stream'));
     });
 });

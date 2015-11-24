@@ -2,6 +2,7 @@ import _ from 'lodash';
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
+import yummly from '../utils/yummly';
 
 const [UserRecipe] = get.models('UserRecipe');
 
@@ -85,7 +86,7 @@ const Collection = bookshelf.Collection.extend({
                 path: '/recipes',
                 queryParams
             }).then((data) => {
-                return cacheMany(data.matches);
+                return cacheMany(data.matches); // eslint-disable-line no-use-before-define
             });
         } else if (searchTerm) {
             return new Collection().query((query) => {
@@ -118,7 +119,7 @@ function cacheMany(yummlyRecipes) {
 
         // save the new recipes
         return collection.add(newRecipes.map((recipe) => {
-            return new Recipe({yummly_id: recipe.id, data: recipe});
+            return new Model({yummly_id: recipe.id, data: recipe});
         })).invokeThen('save').then(() => {
             return collection;
         });

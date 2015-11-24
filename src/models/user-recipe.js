@@ -1,14 +1,18 @@
 import Bluebird from 'bluebird';
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
+import * as get from '../utils/get-models';
+
+const [User, Recipe] = get.models('User', 'Recipe');
+const [Recipes] = get.collections('Recipes');
 
 const Model = bookshelf.Model.extend({
     tableName: 'user_recipe',
     user() {
-        return this.belongsTo(bookshelf.model('User'), 'user_id');
+        return this.belongsTo(User, 'user_id');
     },
     recipe() {
-        return this.belongsTo(bookshelf.model('Recipe'), 'recipe_id');
+        return this.belongsTo(Recipe, 'recipe_id');
     }
 }, {
     makeRelationship: Bluebird.method(({userId, recipeId, action, value}) => {
@@ -34,12 +38,35 @@ const Model = bookshelf.Model.extend({
                     recipe_id: recipeId
                 }).save(action, value);
             }
+        }).catch(() => {
+            return new Error(`Could not mark recipe ${recipeId} as ${action} = ${value} for user ${userId}`);
         });
     })
 });
 
 const Collection = bookshelf.Collection.extend({
     model: Model
+}, {
+    getRecipes: Bluebird.method(({id, constraint, value} = {}) => {
+        if (constraint !== 'made' || constraint !== 'favorited' || constraint !== 'liked') {
+            throw new Error('Invalid constraint type');
+        } else if (!(value === true || value === false || value === null)) {
+            throw new Error('Invalid constraint value');
+        }
+
+        return Collection.query((query) => {
+            query.where({
+                user_id: id,
+                [constraint]: value
+            }).orderBy('id');
+        }).fetch({withRelated: ['recipe']}).then((urs) => {
+            return new Recipes(urs.map((ur) => {
+                return ur.related('recipe');
+            }));
+        }).catch(() => {
+            return new Error('Could not load recipes');
+        });
+    })
 });
 
 export default function initialize() {
