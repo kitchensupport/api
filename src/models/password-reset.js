@@ -10,7 +10,10 @@ const Model = bookshelf.Model.extend({
     tableName: 'reset_password',
     initialize() {
         this.on('creating', (model, attrs) => {
-            return Model.where({user_id: attrs.user_id}).fetch().then((rt) => {
+            return new Model({user_id: attrs.user_id}).fetch().then((rt) => {
+
+                // TODO: if we have this existing reset token for the user,
+                // can we just return this model rather than destroy it just to create a new one?
                 if (rt) {
                     return rt.destroy();
                 }
@@ -34,12 +37,12 @@ const Model = bookshelf.Model.extend({
     createFromEmail(email) {
         const resetToken = uuid.v4();
 
-        return User.where({email}).fetch({require: true}).then((user) => {
+        return new User({email}).fetch({require: true}).then((user) => {
             return new Model({user_id: user.id, reset_token: resetToken}).save();
         });
     },
     confirm(token, newPassword) {
-        return Model.where({reset_token: token}).fetch({require: true, withRelated: ['user']}).then((rt) => {
+        return new Model({reset_token: token}).fetch({require: true, withRelated: ['user']}).then((rt) => {
             if (new Date() > new Date(rt.get('expire_date'))) {
                 return rt.destroy().then(() => {
                     throw new Error('Invalid reset token');
@@ -47,7 +50,7 @@ const Model = bookshelf.Model.extend({
             }
 
             return rt.related('user').save({password: newPassword}, {patch: true}).then((user) => {
-                return rt.destroy.then(() => {
+                return rt.destroy().then(() => {
                     return user;
                 });
             });

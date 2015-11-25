@@ -9,9 +9,13 @@ const [UserRecipe] = get.models('UserRecipe');
 const Model = bookshelf.Model.extend({
     tableName: 'recipes',
     initialize() {
-        this.on('fetching saved', (model) => {
+        this.on('fetching saving', (model) => {
             return model.load('userRecipes');
         });
+
+        // this.on('fetching', (model, columns, options) => {
+        //     return;
+        // });
     },
     userRecipes() {
         return this.hasMany(UserRecipe, 'recipe_id');
@@ -64,6 +68,22 @@ const Model = bookshelf.Model.extend({
 
 const Collection = bookshelf.Collection.extend({
     model: Model,
+    initialize() {
+
+        // this.on('fetched', (model, response, options) => {
+        //
+        //     // if we are given a user id, filter this collection by those recipes
+        //     // with ingredients in the user's pantry
+        //
+        //     if (options._userId) {
+        //         return Pantry.getByUserId(options._userId).then((pantry) => {
+        //             this.each((recipe) => {
+        //                 recipe.get('ingredients').forEach()
+        //             });
+        //         })
+        //     }
+        // });
+    },
     serialize(additional = {}) {
         const {status, limit = this.size(), offset = 0} = additional;
 

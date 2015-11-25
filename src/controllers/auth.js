@@ -24,13 +24,13 @@ router.post('/accounts/create', (req, res, next) => {
         password
     }).save().then((user) => {
         res.status(200).send(user.toJSON({status: 'success'}));
-    }).catch((err) => {
+    }).catch(() => {
         res.status(400).send({
             status: 'failure',
-            error: err.message
+            error: 'Could not create account'
         });
 
-        next(err);
+        next(new Error('Could not create account'));
     });
 });
 
@@ -70,7 +70,7 @@ router.post('/accounts/reset/request', (req, res, next) => {
 router.post('/accounts/reset/confirm', (req, res, next) => {
     const {reset_token, password} = req.body;
 
-    PasswordResetToken.confirm({reset_token, password}).then(() => {
+    PasswordResetToken.confirm(reset_token, password).then(() => {
         res.status(200).send({status: 'success'});
     }).catch((err) => {
         res.status(500).send({status: 'failure'});

@@ -9,24 +9,46 @@ const [Recipe] = getModels('Recipe');
 const bcryptCompare = Bluebird.promisify(bcrypt.compare);
 const bcryptHash = Bluebird.promisify(bcrypt.hash);
 
-const hashPassword = Bluebird.method((model, attrs) => {
-    if (!model.has('password') || !attrs.password) {
-        return model;
-    }
-
-    return bcryptHash(attrs.password, 10).then((hash) => {
+function hashPassword(password, model) {
+    return bcryptHash(password, 10).then((hash) => {
         model.set('password', hash);
         return model;
     }).catch(() => {
         return new Error('Could not hash password');
     });
+}
+
+const onSaving = Bluebird.method((model, attrs) => {
+
+    // we can only do this because the only reason we would ever update a user is to update the password
+    if (!attrs.password) {
+        throw new Error('A password must be provided');
+    }
+
+    return hashPassword(attrs.password, model);
+});
+
+const onFetching = Bluebird.method((model, columns, options) => {
+
+    // just getting a user normally
+    if (options.login !== true) {
+        return model;
+    }
+
+    // logging in
+    if (!model.get('password')) {
+        throw new Error('A password must be provided');
+    }
+
+    return hashPassword(model.get('password'), model);
 });
 
 const Model = bookshelf.Model.extend({
     tableName: 'users',
     hasTimestamps: true,
     initialize() {
-        this.on('creating fetching', hashPassword, this);
+        this.on('saving', onSaving, this);
+        this.on('fetching', onFetching, this);
     },
     likes() {
         return this.belongsToMany(Recipe, 'user_recipe', 'user_id', 'recipe_id').query((query) => {
@@ -56,7 +78,7 @@ const Model = bookshelf.Model.extend({
             throw new Error('A password must be provided');
         }
 
-        return Model.where({email, password}).fetch({require: true}).catch(() => {
+        return new Model({email, password}).fetch({require: true, login: true}).catch(() => {
             return new Error('Could not find a user with that email and password');
         }).then((user) => {
             return bcryptCompare(password, user.get('password')).then((result) => {

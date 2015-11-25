@@ -1,18 +1,39 @@
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
+import * as get from '../utils/get-models';
+
+const [Ingredient] = get.models('Ingredient');
 
 const Model = bookshelf.Model.extend({
     tableName: 'pantry',
     hasTimestamps: true,
+    initialize() {
+        this.on('fetching', (model) => {
+            return model.load('ingredient');
+        });
+    },
     ingredient() {
-        return this.belongsTo(bookshelf.model('Ingredient'), 'ingredient_id');
+        return this.belongsTo(Ingredient, 'ingredient_id');
     },
     serialize() {
-        const ingredient = this.related('ingredient').toJSON();
+        return this.related('ingredient').toJSON({
+            last_updated: this.get('updated_at')
+        });
+    }
+}, {
+    upsert({userId, ingredientId}) {
+        const model = new Model({
+            user_id: userId,
+            ingredient_id: ingredientId
+        });
 
-        ingredient.last_updated = this.get('updated_at');
+        return model.fetch().then((item) => {
+            if (item) {
+                return item.save({active: true}, {patch: true});
+            }
 
-        return ingredient;
+            return model.save();
+        });
     }
 });
 
@@ -26,6 +47,12 @@ const Collection = bookshelf.Collection.extend({
             matches: this.size(),
             items: this.slice(offset, offset + limit)
         };
+    }
+}, {
+    getByUserId(userId) {
+        return new Collection().query((query) => {
+            query.where({user_id: userId, active: true}).orderBy('id');
+        }).fetch();
     }
 });
 
