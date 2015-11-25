@@ -21,7 +21,7 @@ function getConstraint(path) {
 
 /* ********* route initialization ********* */
 
-const userrecipes = router.route('/(completed|favorites|likes)');
+const userrecipes = router.route(/\/(completed|favorites|likes)/);
 
 userrecipes.all(authorize());
 

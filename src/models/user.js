@@ -3,9 +3,9 @@ import _ from 'lodash';
 import Bluebird from 'bluebird';
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
-import getModels from '../utils/get-models';
+import * as get from '../utils/get-models';
 
-const [Recipe] = getModels('Recipe');
+const [Recipe] = get.models('Recipe');
 const bcryptCompare = Bluebird.promisify(bcrypt.compare);
 const bcryptHash = Bluebird.promisify(bcrypt.hash);
 

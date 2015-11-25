@@ -1,9 +1,9 @@
 import express from 'express';
-import getModels from '../utils/get-models';
+import * as get from '../utils/get-models';
 import authorize from '../middleware/auth';
 
 const router = express();
-const [User, PasswordResetToken] = getModels('User', 'PasswordReset');
+const [User, PasswordResetToken] = get.models('User', 'PasswordReset');
 
 /**
  * a middleware that lets the root server use all of the login routes

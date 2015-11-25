@@ -1,10 +1,13 @@
-import {get} from './yummly';
-import {Collection as IngredientCollection} from '../models/ingredient';
+import yummly from './yummly';
+import '../models';
+import * as get from './get-models';
+
+const [IngredientCollection] = get.collections('Ingredients');
 
 function getYummlyIngredients() {
     console.log('Getting yummly ingredients');
 
-    return get({
+    return yummly({
         path: '/metadata/ingredient',
         jsonp: true
     }).then((ingredients) => {

@@ -1,10 +1,10 @@
-import uuid from 'uuid';
+import uuid from 'node-uuid';
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import sendMail from '../utils/email';
-import getModels from '../utils/get-models';
+import * as get from '../utils/get-models';
 
-const [User] = getModels('User');
+const [User] = get.models('User');
 
 const Model = bookshelf.Model.extend({
     tableName: 'reset_password',
