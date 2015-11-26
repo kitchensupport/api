@@ -9,14 +9,14 @@ const [Recipe] = get.models('Recipe');
 const bcryptCompare = Bluebird.promisify(bcrypt.compare);
 const bcryptHash = Bluebird.promisify(bcrypt.hash);
 
-const onSaving = Bluebird.method((model, attrs) => {
+const onSaving = Bluebird.method((model) => {
 
     // we can only do this because the only reason we would ever update a user is to update the password
-    if (!attrs.password) {
+    if (!model.has('password')) {
         throw new Error('A password must be provided');
     }
 
-    return bcryptHash(attrs.password, 10).then((hash) => {
+    return bcryptHash(model.get('password'), 10).then((hash) => {
         model.set('password', hash);
         return model;
     }).catch(() => {
