@@ -5,9 +5,10 @@ import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
 
-const [Recipe] = get.models('Recipe');
 const bcryptCompare = Bluebird.promisify(bcrypt.compare);
 const bcryptHash = Bluebird.promisify(bcrypt.hash);
+
+let Recipe;
 
 const onSaving = Bluebird.method((model) => {
 
@@ -77,7 +78,7 @@ const Collection = bookshelf.Collection.extend({
     model: Model
 });
 
-export default function initialize() {
+export function register() {
     makeTable('users', (schema) => {
         schema.increments('id').primary();
         schema.string('email').unique();
@@ -89,4 +90,8 @@ export default function initialize() {
 
     bookshelf.model('User', Model);
     bookshelf.collection('Users', Collection);
+};
+
+export function load() {
+    [Recipe] = get.models('Recipe');
 };

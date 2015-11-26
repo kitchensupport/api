@@ -4,7 +4,7 @@ import makeTable from '../utils/make-table';
 import sendMail from '../utils/email';
 import * as get from '../utils/get-models';
 
-const [User] = get.models('User');
+let User;
 
 const Model = bookshelf.Model.extend({
     tableName: 'reset_password',
@@ -49,7 +49,7 @@ const Model = bookshelf.Model.extend({
                 });
             }
 
-            return rt.related('user').save({password: newPassword}, {patch: true}).then((user) => {
+            return rt.related('user').set('password', newPassword).save().then((user) => {
                 return rt.destroy().then(() => {
                     return user;
                 });
@@ -58,7 +58,7 @@ const Model = bookshelf.Model.extend({
     }
 });
 
-export default function initialize() {
+export function register() {
     makeTable('reset_password', (schema) => {
         schema.increments('id').primary();
         schema.integer('user_id');
@@ -67,4 +67,8 @@ export default function initialize() {
     });
 
     bookshelf.model('PasswordReset', Model);
+};
+
+export function load() {
+    [User] = get.models('User');
 };

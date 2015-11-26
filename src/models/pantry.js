@@ -2,7 +2,7 @@ import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
 
-const [Ingredient] = get.models('Ingredient');
+let Ingredient;
 
 const Model = bookshelf.Model.extend({
     tableName: 'pantry',
@@ -56,7 +56,7 @@ const Collection = bookshelf.Collection.extend({
     }
 });
 
-export default function initialize() {
+export function register() {
     makeTable('pantry', (schema) => {
         schema.increments('id').primary();
         schema.integer('user_id').references('id').inTable('users').notNullable();
@@ -68,4 +68,8 @@ export default function initialize() {
 
     bookshelf.model('PantryItem', Model);
     bookshelf.collection('Pantry', Collection);
-}
+};
+
+export function load() {
+    [Ingredient] = get.models('Ingredient');
+};

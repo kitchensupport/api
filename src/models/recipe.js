@@ -4,7 +4,7 @@ import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
 import yummly from '../utils/yummly';
 
-const [UserRecipe] = get.models('UserRecipe');
+let UserRecipe;
 
 const Model = bookshelf.Model.extend({
     tableName: 'recipes',
@@ -148,7 +148,7 @@ function cacheMany(yummlyRecipes) {
     });
 }
 
-export default function initialize() {
+export function register() {
     makeTable('recipes', (schema) => {
         schema.increments('id').primary();
         schema.string('yummly_id').unique();
@@ -157,4 +157,8 @@ export default function initialize() {
 
     bookshelf.model('Recipe', Model);
     bookshelf.collection('Recipe', Collection);
+};
+
+export function load() {
+    [UserRecipe] = get.models('UserRecipe');
 };

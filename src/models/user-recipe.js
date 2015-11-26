@@ -3,8 +3,9 @@ import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
 
-const [User, Recipe] = get.models('User', 'Recipe');
-const [Recipes] = get.collections('Recipes');
+let User;
+let Recipe;
+let Recipes;
 
 const Model = bookshelf.Model.extend({
     tableName: 'user_recipe',
@@ -69,7 +70,7 @@ const Collection = bookshelf.Collection.extend({
     })
 });
 
-export default function initialize() {
+export function register() {
     makeTable('user_recipe', (schema) => {
         schema.increments('id').primary();
         schema.integer('user_id').references('id').inTable('users').notNullable();
@@ -82,4 +83,9 @@ export default function initialize() {
 
     bookshelf.model('UserRecipe', Model);
     bookshelf.collection('UserRecipes', Collection);
+};
+
+export function load() {
+    [User, Recipe] = get.models('User', 'Recipe');
+    [Recipes] = get.collections('Recipes');
 };

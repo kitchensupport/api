@@ -2,7 +2,7 @@ import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
 
-const [Recipes] = get.collections('Recipes');
+let Recipes;
 
 const Model = bookshelf.Model.extend({
     tableName: 'ingredients',
@@ -24,7 +24,7 @@ const Collection = bookshelf.Collection.extend({
     }
 });
 
-export default function initialize() {
+export function register() {
     makeTable('ingredients', (schema) => {
         schema.increments('id').primary();
         schema.string('searchValue').unique();
@@ -33,4 +33,8 @@ export default function initialize() {
 
     bookshelf.model('Ingredient', Model);
     bookshelf.collection('Ingredients', Collection);
-}
+};
+
+export function load() {
+    [Recipes] = get.collections('Recipes');
+};
