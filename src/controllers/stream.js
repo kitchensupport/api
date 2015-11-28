@@ -11,7 +11,7 @@ export function routes() {
 /* ********* route initialization ********* */
 
 router.get('/stream', (req, res, next) => {
-    const {limit = 30, offset = 0, forceNew = false} = req.query;
+    const {limit, offset, forceNew = false} = req.query;
 
     Recipes.getRecipes({limit, offset, forceNew}).then((recipes) => {
         res.status(200).send(recipes.toJSON({
@@ -19,12 +19,12 @@ router.get('/stream', (req, res, next) => {
             limit,
             offset
         }));
-    }).catch(() => {
+    }).catch((err) => {
         res.status(403).send({
             status: 'failure',
-            error: 'Unable to retrieve recipe stream'
+            error: err.message
         });
 
-        next(new Error('Unable to retrieve recipe stream'));
+        next(err);
     });
 });

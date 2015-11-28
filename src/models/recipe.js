@@ -9,18 +9,16 @@ let UserRecipe;
 const Model = bookshelf.Model.extend({
     tableName: 'recipes',
     initialize() {
-        this.on('fetching saving', (model) => {
+        this.on('fetched saved', (model) => {
             return model.load('userRecipes');
         });
-
-        // this.on('fetching', (model, columns, options) => {
-        //     return;
-        // });
     },
     userRecipes() {
         return this.hasMany(UserRecipe, 'recipe_id');
     },
-    serialize(additional = {}) {
+    serialize(args) {
+        let additional = _.isObject(args) ? args : {};
+
         const data = this.get('data');
         const yummlyId = data.id;
         const id = this.get('id');
@@ -33,16 +31,20 @@ const Model = bookshelf.Model.extend({
         let favorited = false;
         let completed = false;
 
+        if (!_.isObject(additional)) {
+            additional = {};
+        }
+
         related.each((ur) => {
-            if (userId === ur.user_id) {
+            if (userId === ur.get('user_id')) {
                 liked = ur.liked;
                 favorited = ur.favorited;
                 completed = ur.made;
             }
 
-            if (ur.liked === true) { likes++; }
-            if (ur.favorited === true) { favorites++; }
-            if (ur.made === true) { completions++; }
+            if (ur.get('liked') === true) { likes++; }
+            if (ur.get('favorited') === true) { favorites++; }
+            if (ur.get('made') === true) { completions++; }
         });
 
         return _.assign(data, {
@@ -85,7 +87,13 @@ const Collection = bookshelf.Collection.extend({
         // });
     },
     serialize(additional = {}) {
-        const {status, limit = this.size(), offset = 0} = additional;
+        const {status} = additional;
+        const offset = parseInt(additional.offset || 0, 10);
+        const limit = parseInt(additional.limit || 30, 10);
+
+        if (Number.isNaN(offset) || Number.isNaN(limit)) {
+            throw new Error('Invalid argument parameters');
+        }
 
         return {
             status,
@@ -110,11 +118,11 @@ const Collection = bookshelf.Collection.extend({
             });
         } else if (searchTerm) {
             return new Collection().query((query) => {
-                query.whereRaw(`data ->> 'recipeName' ILIKE ?`, [`%${searchTerm}%`]);
+                query.whereRaw(`data ->> 'recipeName' ILIKE ?`, [`%${searchTerm}%`]).orderBy('id');
             }).fetch();
         } else {
             return new Collection().fetch().then((collection) => {
-                return collection.suffle();
+                return new Collection(collection.shuffle());
             });
         }
     }
@@ -156,7 +164,7 @@ export function register() {
     });
 
     bookshelf.model('Recipe', Model);
-    bookshelf.collection('Recipe', Collection);
+    bookshelf.collection('Recipes', Collection);
 };
 
 export function load() {
