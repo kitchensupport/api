@@ -16,13 +16,10 @@ const Model = bookshelf.Model.extend({
     userRecipes() {
         return this.hasMany(UserRecipe, 'recipe_id');
     },
-    serialize(args) {
-        let additional = _.isObject(args) ? args : {};
-
+    serialize({userId, status} = {}) {
         const data = this.get('data');
         const yummlyId = data.id;
         const id = this.get('id');
-        const userId = additional.user_id;
         const related = this.related('userRecipes');
         let likes = 0;
         let favorites = 0;
@@ -31,15 +28,11 @@ const Model = bookshelf.Model.extend({
         let favorited = false;
         let completed = false;
 
-        if (!_.isObject(additional)) {
-            additional = {};
-        }
-
         related.each((ur) => {
             if (userId === ur.get('user_id')) {
-                liked = ur.liked;
-                favorited = ur.favorited;
-                completed = ur.made;
+                liked = ur.get('liked');
+                favorited = ur.get('favorited');
+                completed = ur.get('made');
             }
 
             if (ur.get('liked') === true) { likes++; }
@@ -55,8 +48,9 @@ const Model = bookshelf.Model.extend({
             completions,
             liked,
             favorited,
-            completed
-        }, additional);
+            completed,
+            status
+        });
     }
 }, {
     getRecipe({id, yummlyId} = {}) {
@@ -70,22 +64,6 @@ const Model = bookshelf.Model.extend({
 
 const Collection = bookshelf.Collection.extend({
     model: Model,
-    initialize() {
-
-        // this.on('fetched', (model, response, options) => {
-        //
-        //     // if we are given a user id, filter this collection by those recipes
-        //     // with ingredients in the user's pantry
-        //
-        //     if (options._userId) {
-        //         return Pantry.getByUserId(options._userId).then((pantry) => {
-        //             this.each((recipe) => {
-        //                 recipe.get('ingredients').forEach()
-        //             });
-        //         })
-        //     }
-        // });
-    },
     serialize(additional = {}) {
         const {status} = additional;
         const offset = parseInt(additional.offset || 0, 10);
@@ -98,7 +76,7 @@ const Collection = bookshelf.Collection.extend({
         return {
             status,
             matches: this.size(),
-            recipes: this.slice(offset, offset + limit)
+            recipes: this.slice(offset, offset + limit).map((model) => model.toJSON({userId: additional.userId}))
         };
     }
 }, {
@@ -119,9 +97,9 @@ const Collection = bookshelf.Collection.extend({
         } else if (searchTerm) {
             return new Collection().query((query) => {
                 query.whereRaw(`data ->> 'recipeName' ILIKE ?`, [`%${searchTerm}%`]).orderBy('id');
-            }).fetch();
+            }).fetch({withRelated: 'userRecipes'});
         } else {
-            return new Collection().fetch().then((collection) => {
+            return new Collection().fetch({withRelated: 'userRecipes'}).then((collection) => {
                 return new Collection(collection.shuffle());
             });
         }
