@@ -7,11 +7,6 @@ let Ingredient;
 const Model = bookshelf.Model.extend({
     tableName: 'pantry',
     hasTimestamps: true,
-    initialize() {
-        this.on('fetching', (model) => {
-            return model.load('ingredient');
-        });
-    },
     ingredient() {
         return this.belongsTo(Ingredient, 'ingredient_id');
     },
@@ -52,7 +47,7 @@ const Collection = bookshelf.Collection.extend({
     getByUserId(userId) {
         return new Collection().query((query) => {
             query.where({user_id: userId, active: true}).orderBy('id');
-        }).fetch();
+        }).fetch({withRelated: 'ingredient'});
     }
 });
 
