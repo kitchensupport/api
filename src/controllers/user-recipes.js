@@ -26,7 +26,7 @@ const userrecipes = router.route(/\/(completed|favorites|likes)/);
 userrecipes.all(authorize());
 
 userrecipes.get((req, res, next) => {
-    const value = req.query.value === 'true';
+    const value = req.query.value === 'false' ? false : true;
     const constraint = getConstraint(req.path);
     const userId = req.user.id;
     const {limit, offset} = req.page;
