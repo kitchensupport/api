@@ -22,6 +22,16 @@ const Collection = bookshelf.Collection.extend({
             ingredients: this.slice(offset, offset + limit)
         };
     }
+}, {
+    getIngredients({searchTerm}) {
+        return new Collection().query((query) => {
+            if (searchTerm) {
+                query.whereRaw('term ILIKE ?', [`%${searchTerm}%`]);
+            }
+
+            query.orderBy('id');
+        }).fetch();
+    }
 });
 
 export function register() {

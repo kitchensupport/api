@@ -13,7 +13,7 @@ export function routes() {
 router.get('/ingredients', (req, res, next) => {
     const {limit, offset} = req.page;
 
-    new Ingredients().fetch().then((ingredients) => {
+    Ingredients.getIngredients().then((ingredients) => {
         res.status(200).send(ingredients.toJSON({
             status: 'success',
             limit,
@@ -32,9 +32,7 @@ router.get('/ingredients', (req, res, next) => {
 router.get('/ingredients/:search', (req, res, next) => {
     const {limit, offset} = req.page;
 
-    new Ingredients().query((query) => {
-        query.where({searchTerm: req.params.search});
-    }).fetch({require: true}).then((ingredients) => {
+    Ingredients.getIngredients({searchTerm: req.params.search}).then((ingredients) => {
         res.status(200).send(ingredients.toJSON({
             status: 'success',
             limit,
