@@ -12,8 +12,9 @@ export function routes() {
 /* ********* route initialization ********* */
 
 router.get('/stream', authorize({required: false}), (req, res, next) => {
-    const {limit, offset, forceNew = false} = req.query;
+    const forceNew = req.query.forceNew === 'true';
     const userId = req.user && req.user.id;
+    const {limit, offset} = req.page;
 
     Recipes.getRecipes({limit, offset, forceNew}).then((recipes) => {
         res.status(200).send(recipes.toJSON({

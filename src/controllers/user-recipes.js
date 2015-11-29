@@ -26,9 +26,10 @@ const userrecipes = router.route(/\/(completed|favorites|likes)/);
 userrecipes.all(authorize());
 
 userrecipes.get((req, res, next) => {
-    const {limit = 30, offset = 0, value = true} = req.query;
+    const value = req.query.value === 'true';
     const constraint = getConstraint(req.path);
     const userId = req.user.id;
+    const {limit, offset} = req.page;
 
     UserRecipes.getRecipes({id: req.user.id, constraint, value}).then((recipes) => {
         res.status(200).send(recipes.toJSON({

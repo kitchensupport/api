@@ -11,7 +11,7 @@ export function routes() {
 /* ********* route initialization ********* */
 
 router.get('/ingredients', (req, res, next) => {
-    const {limit = 30, offset = 0} = req.query;
+    const {limit, offset} = req.page;
 
     new Ingredients().fetch().then((ingredients) => {
         res.status(200).send(ingredients.toJSON({
@@ -30,7 +30,7 @@ router.get('/ingredients', (req, res, next) => {
 });
 
 router.get('/ingredients/:search', (req, res, next) => {
-    const {limit = 30, offset = 0} = req.query;
+    const {limit, offset} = req.page;
 
     new Ingredients().query((query) => {
         query.where({searchTerm: req.params.search});

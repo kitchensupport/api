@@ -60,13 +60,7 @@ const Model = bookshelf.Model.extend({
 const Collection = bookshelf.Collection.extend({
     model: Model,
     serialize(additional = {}) {
-        const {status} = additional;
-        const offset = parseInt(additional.offset || 0, 10);
-        const limit = parseInt(additional.limit || 30, 10);
-
-        if (Number.isNaN(offset) || Number.isNaN(limit)) {
-            throw new Error('Invalid argument parameters');
-        }
+        const {status, offset = 0, limit = 30} = additional;
 
         return {
             status,

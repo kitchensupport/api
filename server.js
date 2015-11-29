@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import morgan from 'morgan';
+import parsePage from './src/middleware/parse-page';
 
 // initialize models
 import './src/models';
@@ -23,6 +24,7 @@ app.options('*', cors());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'short' : 'dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(parsePage());
 
 // controllers
 app.use(authRouter());

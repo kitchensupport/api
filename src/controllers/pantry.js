@@ -17,7 +17,7 @@ const pantry = router.route('/pantry');
 pantry.all(authorize());
 
 pantry.get((req, res, next) => {
-    const {limit = 30, offset = 0} = req.query;
+    const {limit, offset} = req.page;
 
     Pantry.getByUserId(req.user.id).then((items) => {
         res.status(200).send(items.toJSON({
