@@ -53,7 +53,7 @@ router.post('/accounts/login', (req, res, next) => {
 });
 
 router.get('/account', authorize(), (req, res) => {
-    res.status(200).send(req.user.toJSON({status: 'success'}));
+    res.status(200).send(Object.assign({}, req.user, {status: 'success'}));
 });
 
 router.post('/accounts/reset/request', (req, res, next) => {

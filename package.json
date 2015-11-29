@@ -23,6 +23,7 @@
   "dependencies": {
     "babel": "^5.8.23",
     "bcrypt": "^0.8.5",
+    "bluebird": "^3.0.5",
     "body-parser": "^1.14.1",
     "bookshelf": "^0.8.2",
     "cors": "^2.7.1",
