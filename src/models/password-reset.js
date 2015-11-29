@@ -61,7 +61,7 @@ const Model = bookshelf.Model.extend({
 export function register() {
     makeTable('reset_password', (schema) => {
         schema.increments('id').primary();
-        schema.integer('user_id');
+        schema.integer('user_id').unique();
         schema.string('reset_token').unique();
         schema.dateTime('expire_date').defaultTo(bookshelf.knex.raw('now() + INTERVAL \'30 minutes\''));
     });
