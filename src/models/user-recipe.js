@@ -13,7 +13,10 @@ const Model = bookshelf.Model.extend({
         return this.belongsTo(User, 'user_id');
     },
     recipe() {
-        return this.belongsTo(Recipe, 'recipe_id');
+        return this.belongsTo(Recipe, 'recipe_id').query((query) => query.orderBy('recipes.id'));
+    },
+    serialize(args = {}) {
+        return this.related('recipe') ? this.related('recipe').toJSON(args) : {};
     }
 }, {
     makeRelationship: Bluebird.method(({userId, recipeId, action, value}) => {
@@ -46,10 +49,13 @@ const Model = bookshelf.Model.extend({
 });
 
 const Collection = bookshelf.Collection.extend({
-    model: Model
+    model: Model,
+    serialize(args = {}) {
+        return new Recipes(this.toArray().map((ur) => ur.related('recipe'))).toJSON(args);
+    }
 }, {
     getRecipes: Bluebird.method(({id, constraint, value} = {}) => {
-        if (constraint !== 'made' || constraint !== 'favorited' || constraint !== 'liked') {
+        if (!(constraint === 'made' || constraint === 'favorited' || constraint === 'liked')) {
             throw new Error('Invalid constraint type');
         } else if (!(value === true || value === false || value === null)) {
             throw new Error('Invalid constraint value');
@@ -59,12 +65,8 @@ const Collection = bookshelf.Collection.extend({
             query.where({
                 user_id: id,
                 [constraint]: value
-            }).orderBy('id');
-        }).fetch({withRelated: ['recipe']}).then((urs) => {
-            return new Recipes(urs.map((ur) => {
-                return ur.related('recipe');
-            }));
-        }).catch(() => {
+            });
+        }).fetch({withRelated: 'recipe.userRecipes'}).catch(() => {
             return new Error('Could not load recipes');
         });
     })

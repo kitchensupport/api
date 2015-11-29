@@ -24,13 +24,12 @@ router.get('/recipes/search/:searchTerm', authorize({required: false}), (req, re
             userId
         }));
     }).catch((err) => {
-        console.error(err);
         res.status(404).send({
             status: 'failure',
             error: 'Unable to find recipes'
         });
 
-        next(new Error(`Unable to search recipes like ${req.params.searchTerm}`));
+        next(err);
     });
 });
 
@@ -42,12 +41,12 @@ router.get('/recipe', authorize({required: false}), (req, res, next) => {
             status: 'success',
             userId
         }));
-    }).catch(() => {
+    }).catch((err) => {
         res.status(404).send({
             status: 'failure',
             error: 'Unable to retrieve recipe'
         });
 
-        next(new Error(`Unable to retrieve recipe with id ${req.params.recipeId}`));
+        next(err);
     });
 });

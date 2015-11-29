@@ -8,11 +8,6 @@ let UserRecipe;
 
 const Model = bookshelf.Model.extend({
     tableName: 'recipes',
-    initialize() {
-        this.on('fetched saved', (model) => {
-            return model.load('userRecipes');
-        });
-    },
     userRecipes() {
         return this.hasMany(UserRecipe, 'recipe_id');
     },
@@ -55,9 +50,9 @@ const Model = bookshelf.Model.extend({
 }, {
     getRecipe({id, yummlyId} = {}) {
         if (id) {
-            return Model.where({id}).fetch();
+            return Model.where({id}).fetch({withRelated: 'userRecipes'});
         } else {
-            return Model.where({yummly_id: yummlyId}).fetch();
+            return Model.where({yummly_id: yummlyId}).fetch({withRelated: 'userRecipes'});
         }
     }
 });

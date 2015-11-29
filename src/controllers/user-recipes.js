@@ -28,20 +28,22 @@ userrecipes.all(authorize());
 userrecipes.get((req, res, next) => {
     const {limit = 30, offset = 0, value = true} = req.query;
     const constraint = getConstraint(req.path);
+    const userId = req.user.id;
 
     UserRecipes.getRecipes({id: req.user.id, constraint, value}).then((recipes) => {
         res.status(200).send(recipes.toJSON({
             status: 'success',
             limit,
-            offset
+            offset,
+            userId
         }));
-    }).catch(() => {
+    }).catch((err) => {
         res.status(403).send({
             status: 'failure',
             error: 'Unable to retrieve completed recipes'
         });
 
-        next(new Error(`Unable to load completed recipes for user ${req.user.id}`));
+        next(err);
     });
 });
 
