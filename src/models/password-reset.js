@@ -9,8 +9,8 @@ let User;
 const Model = bookshelf.Model.extend({
     tableName: 'reset_password',
     initialize() {
-        this.on('creating', (model, attrs) => {
-            return new Model({user_id: attrs.user_id}).fetch().then((rt) => {
+        this.on('creating', (model) => {
+            return new Model({user_id: model.get('user_id')}).fetch().then((rt) => {
 
                 // TODO: if we have this existing reset token for the user,
                 // can we just return this model rather than destroy it just to create a new one?
@@ -20,18 +20,18 @@ const Model = bookshelf.Model.extend({
             });
         });
 
-        this.on('created', (model, attrs) => {
+        this.on('created', (model) => {
             return model.fetch({withRelated: ['user']}).then((rt) => {
                 return sendMail({
-                    to: rt.related('user').email,
+                    to: rt.related('user').get('email'),
                     subject: 'Reset your Kitchen Support password',
-                    text: `Hey there, you seem to have requested a password reset. Click on the link below to enter your new password! Warning: the link is only active for 30 minutes from the time that this email is sent!\n\nhttp://kitchen.support/#/forgot-password/${attrs.token}\n\nIf this wasnt you, you can disregard this email.`
+                    text: `Hey there, you seem to have requested a password reset. Click on the link below to enter your new password! Warning: the link is only active for 30 minutes from the time that this email is sent!\n\nhttp://kitchen.support/#/forgot-password/${model.get('reset_token')}\n\nIf this wasnt you, you can disregard this email.`
                 });
             });
         });
     },
     user() {
-        return this.belongsTo(bookshelf.model('User'));
+        return this.belongsTo(User, 'user_id');
     }
 }, {
     createFromEmail(email) {
