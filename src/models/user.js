@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import _ from 'lodash';
 import Bluebird from 'bluebird';
+import uuid from 'node-uuid';
 import bookshelf from '../utils/database';
 import makeTable from '../utils/make-table';
 import * as get from '../utils/get-models';
@@ -29,6 +30,9 @@ const Model = bookshelf.Model.extend({
     tableName: 'users',
     hasTimestamps: true,
     initialize() {
+        this.on('creating', (model) => {
+            model.set('api_token', uuid.v4());
+        });
         this.on('saving', onSaving, this);
     },
     likes() {
