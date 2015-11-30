@@ -172,7 +172,7 @@ Likes, favorites, and completions all act similarly. The API semantics for each 
 #### Get all liked/favorited/completed recipes
 **Definition**
 ```
-GET http://api.kitchen.support/favorites
+GET http://api.kitchen.support/:action
 ```
 
 **Arguments**
