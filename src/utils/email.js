@@ -1,12 +1,14 @@
 import mailer from 'nodemailer';
-import mandrill from 'nodemailer-mandrill-transport';
-import {mandrillApiKey as apiKey, fromEmail} from '../../config/email';
+import sendgrid from 'nodemailer-sendgrid-transport';
+import {sendgridApiKey as apiKey, fromEmail} from '../../config/email';
 
-const transport = mailer.createTransport(mandrill({
-    auth: {apiKey}
+const transport = mailer.createTransport(sendgrid({
+    auth: {
+        api_key: apiKey
+    }
 }));
 
-export function send(params) {
+export default function send(params) {
     return new Promise((resolve, reject) => {
         transport.sendMail({
             from: fromEmail,
@@ -14,12 +16,12 @@ export function send(params) {
             replyto: 'donotreply@kitchen.support',
             subject: params.subject,
             text: params.text
-        }, (err, info) => {
-            if (err || info.rejected.length > 0) {
+        }, (err, response) => {
+            if (err) {
                 return reject(err);
             }
 
-            resolve(info);
+            resolve(response);
         });
     });
 };

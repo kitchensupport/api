@@ -1,49 +1,34 @@
 import express from 'express';
-import * as yummly from '../utils/yummly';
-import {Collection as RecipeCollection} from '../models/recipe';
+import authorize from '../middleware/auth';
+import * as get from '../utils/get-models';
 
+const [Recipes] = get.collections('Recipes');
 const router = express();
 
 export function routes() {
     return router;
 };
 
-export function getRecipeStream({forceNew = false, limit = 30, offset = 0}) {
-    if (forceNew) {
-        return yummly.get({
-            path: '/recipes',
-            queryParams: {
-                maxResult: limit,
-                start: offset
-            }
-        }).then((data) => {
-            return yummly.cacheMany(data.matches);
-        });
-    } else {
-        return new RecipeCollection().fetch().then((collection) => {
-            return new RecipeCollection(collection.shuffle());
-        });
-    }
-};
-
 /* ********* route initialization ********* */
 
-router.get('/stream', (req, res, next) => {
-    const {limit = 30, offset = 0, forceNew = false} = req.query;
+router.get('/stream', authorize({required: false}), (req, res, next) => {
+    const forceNew = req.query.forceNew === 'true';
+    const userId = req.user && req.user.id;
+    const {limit, offset} = req.page;
 
-    getRecipeStream({limit, offset, forceNew}).then((recipes) => {
+    Recipes.getRecipes({limit, offset, forceNew}).then((recipes) => {
         res.status(200).send(recipes.toJSON({
             status: 'success',
             limit,
-            offset
+            offset,
+            userId
         }));
     }).catch((err) => {
-        console.error(err);
         res.status(403).send({
             status: 'failure',
-            error: 'Unable to retrieve featured recipes'
+            error: err.message
         });
 
-        next(new Error('Unable to retrieve featured recipes'));
+        next(err);
     });
 });

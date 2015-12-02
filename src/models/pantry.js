@@ -1,38 +1,70 @@
 import bookshelf from '../utils/database';
-import model from '../utils/model';
-import {Model as Ingredient} from './ingredient';
+import makeTable from '../utils/make-table';
+import * as get from '../utils/get-models';
 
-model('pantry', (schema) => {
-    schema.increments('id').primary();
-    schema.integer('user_id').references('id').inTable('users').notNullable();
-    schema.integer('ingredient_id').references('id').inTable('ingredients').notNullable();
-    schema.unique(['user_id', 'ingredient_id']);
-    schema.boolean('active').notNullable().defaultTo(true);
-    schema.timestamps();
-});
+let Ingredient;
 
-export const Model = bookshelf.Model.extend({
+const Model = bookshelf.Model.extend({
     tableName: 'pantry',
     hasTimestamps: true,
     ingredient() {
         return this.belongsTo(Ingredient, 'ingredient_id');
     },
     serialize() {
-        const ingredient = this.related('ingredient').toJSON();
+        return this.related('ingredient').toJSON({
+            last_updated: this.get('updated_at')
+        });
+    }
+}, {
+    upsert({userId, ingredientId}) {
+        const model = new Model({
+            user_id: userId,
+            ingredient_id: ingredientId
+        });
 
-        ingredient.last_updated = this.get('updated_at');
+        return model.fetch().then((item) => {
+            if (item) {
+                return item.save({active: true}, {patch: true});
+            }
 
-        return ingredient;
+            return model.save();
+        });
     }
 });
 
-export const Collection = bookshelf.Collection.extend({
+const Collection = bookshelf.Collection.extend({
     model: Model,
-    serialize({status, offset = 0, limit = this.size()}) {
+    serialize(additional = {}) {
+        const {status, limit = this.size(), offset = 0} = additional;
+
         return {
             status,
             matches: this.size(),
             items: this.slice(offset, offset + limit)
         };
     }
+}, {
+    getByUserId(userId) {
+        return new Collection().query((query) => {
+            query.where({user_id: userId, active: true}).orderBy('id');
+        }).fetch({withRelated: 'ingredient'});
+    }
 });
+
+export function register() {
+    makeTable('pantry', (schema) => {
+        schema.increments('id').primary();
+        schema.integer('user_id').references('id').inTable('users').notNullable();
+        schema.integer('ingredient_id').references('id').inTable('ingredients').notNullable();
+        schema.unique(['user_id', 'ingredient_id']);
+        schema.boolean('active').notNullable().defaultTo(true);
+        schema.timestamps();
+    });
+
+    bookshelf.model('PantryItem', Model);
+    bookshelf.collection('Pantry', Collection);
+};
+
+export function load() {
+    [Ingredient] = get.models('Ingredient');
+};

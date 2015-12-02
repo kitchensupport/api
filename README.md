@@ -17,15 +17,13 @@ All requests relating to accounts will have a response in this form unless other
 
 ```json
 {
-  "status": "success",
-  "user": {
-    "id": 1,
-    "email": "test@kitchen.support",
-    "facebook_token": null,
-    "api_token": "35531950-8156-4c51",
-    "created_at": "2015-10-17T00:52:32.665Z",
-    "updated_at": "2015-10-17T00:52:32.665Z"
-  }
+  "email": "jackpeterhorton@gmail.com",
+  "id": 1,
+  "facebook_token": null,
+  "api_token": "35531950-8156-4c51-9939-719acdfaf458",
+  "created_at": "2015-10-17T00:52:32.665Z",
+  "updated_at": "2015-11-29T18:27:33.337Z",
+  "status": "success"
 }
 ```
 
@@ -88,39 +86,49 @@ POST http://api.kitchen.support/accounts/reset/confirm
 #### The recipe object
 ```json
 {
-  "id": 3,
-  "rating": 3,
+  "id": 376,
+  "rating": 4,
   "flavors": {
-    "sour": 0.5,
-    "meaty": 0,
-    "salty": 0,
-    "sweet": 0.8333333333333334,
-    "bitter": 0,
+    "sour": 0.16666666666666666,
+    "meaty": 0.5,
+    "salty": 0.8333333333333334,
+    "sweet": 0.16666666666666666,
+    "bitter": 0.6666666666666666,
     "piquant": 0
   },
   "attributes": {
-    "course": []
+    "course": [
+      "Breakfast and Brunch"
+    ]
   },
-  "recipeName": "Home Remedies Against Bronchitis, Cough and Lung Problems!",
+  "recipeName": "Easy Veggie Breakfast Burritos",
   "ingredients": [
-    "purple onion",
-    "sugar",
-    "lemon",
-    "water",
-    "honey"
+    "butter",
+    "flour tortillas",
+    "cheddar cheese",
+    "veggies"
   ],
   "smallImageUrls": [
-    "https://lh3.googleusercontent.com/HO_Wkrz3TvqHuNZlxsB4SflVkR5yIyJF20_mAVhnUfIyN0-Jn4wB2bEf2SjekjZvS6M2q3v6IKPfevKcYFG88A=s90"
+    "https://lh3.googleusercontent.com/OC7kODAIOY-mtPSSrfIjaUjnkq0ksR_1SLVKnZYh2_o5XzBCyLvce7yWRRgG3HkIG4DqTDlTlcWTObpkob93GA=s90"
   ],
   "imageUrlsBySize": {
-    "90": "https://lh3.googleusercontent.com/xw77XWwOrxFUTnJOUj02URIKfhU_ULzeylcLCJXngX8Wu7b461u4iPl9y4JozTsGR9vsb-Cz98WmZL-3qgu83g=s90-c"
+    "90": "https://lh3.googleusercontent.com/AQ9MlzMbDvhjXSPY7BXR4jPO0ohYi0YWoxf4sXKk333lGS0_aH8Q_dkhI-Erp_5C8I3Hpk1tRVczNLcIWspD0A=s90-c"
   },
-  "sourceDisplayName": "Healthy Food Team",
-  "totalTimeInSeconds": 2400,
-  "yummly_id": "Home-Remedies-Against-Bronchitis_-Cough-and-Lung-Problems_-1357174",
+  "sourceDisplayName": "The Parent Spot",
+  "totalTimeInSeconds": 900,
+  "yummly_id": "Easy-Veggie-Breakfast-Burritos-1365839",
+  "likes": 0,
+  "favorites": 2,
+  "completions": 2,
+  "liked": null,
+  "favorited": false,
+  "completed": false,
   "status": "success"
 }
 ```
+
+#### Personalized recipes
+All routes that return recipe objects can have an `api_token` provided. If it is a valid API token, the `liked`, `favorited`, and `completed` fields will be valid for each recipe object – that is, if the user has liked recipe 376, `liked` will be `true` for recipe 376 when it is returned
 
 #### Get the recipe stream
 **Definition**
@@ -158,87 +166,56 @@ GET http://api.kitchen.support/recipes/search/:searchTerm
 - `offset`: the offset of recipes to return, similar to the concept of "paging". `0` by default.
 - `forceNew`: If `forceNew` is set to `true`, the API will call out to Yummly first to get the day's featured recipes, cache them, and then return the result. This call takes significantly longer with `forceNew` set, and as such it's use is discouraged except to build out the database.
 
-### Liking recipes
-#### Like a recipe
+### Liking, favoriting, and completing recipes
+Likes, favorites, and completions all act similarly. The API semantics for each are the same, and the respective paths are `/likes`, `/favorites`, `/completed`
+
+#### Get all liked/favorited/completed recipes
 **Definition**
 ```
-POST http://api.kitchen.support/likes
-```
-
-**Arguments**
-- `api_token`: A valid API token.
-- `recipe_id`: The `id` of the recipe being liked.
-- `value`: a `boolean` or `null`, describing the state of the liking relationship. `true` corresponds to liking a recipe, `false` corresponds to disliking a recipe, and `null` corresponds to being neutral or un-liking/un-disliking.
-
-### Favoriting recipes
-#### Get all favorited recipes
-**Definition**
-```
-GET http://api.kitchen.support/favorites
+GET http://api.kitchen.support/:action
 ```
 
 **Arguments**
 - `api_token`: A valid API token.
 - `limit`: the number of recipes to return, `30` by default.
 - `offset`: the offset of recipes to return, similar to the concept of "paging". `0` by default.
+- `value`: (*Optional*) the value of the relationship to be retrieved, defaults to `true` (otherwise can be `false`).
 
-#### Favorite a recipe
+#### Like/favorite/complete a recipe
 **Definition**
 ```
-POST http://api.kitchen.support/favorites
+POST http://api.kitchen.support/:action
 ```
 
 **Arguments**
 - `api_token`: A valid API token.
-- `recipe_id`: The `id` of the recipe being favorited.
+- `recipe_id`: The `id` of the recipe being liked/favorited/completed.
 
-#### Un-favorite a recipe
+#### Unlike/unfavorite/un-complete a recipe
 **Definition**
 ```
-DELETE http://api.kitchen.support/favorites
+DELETE http://api.kitchen.support/:action
 ```
 
 **Arguments**
 - `api_token`: A valid API token.
-- `recipe_id`: The `id` of the recipe being un-favorited.
-
-### Completing recipes
-#### Get all completed recipes
-**Definition**
-```
-GET http://api.kitchen.support/completed
-```
-
-**Arguments**
-- `api_token`: A valid API token.
-- `limit`: the number of recipes to return, `30` by default.
-- `offset`: the offset of recipes to return, similar to the concept of "paging". `0` by default.
-
-#### Favorite a recipe
-**Definition**
-```
-POST http://api.kitchen.support/completed
-```
-
-**Arguments**
-- `api_token`: A valid API token.
-- `recipe_id`: The `id` of the recipe being completed.
-
-#### Un-favorite a recipe
-**Definition**
-```
-DELETE http://api.kitchen.support/completed
-```
-
-**Arguments**
-- `api_token`: A valid API token.
-- `recipe_id`: The `id` of the recipe being un-completed.
+- `recipe_id`: The `id` of the recipe being unliked/unfavorited/un-completed.
 
 ### Ingredients
 #### Getting all ingredients
 **Definition**
 ```
 GET http://api.kitchen.support/ingredients
+```
+
+**Arguments**
+- `limit`: the number of ingredients to return, `30` by default.
+- `offset`: the offset of ingredients to return, similar to the concept of "paging". `0` by default.
+
+#### Search ingredients
+**Definition**
+```
+GET http://api.kitchen.support/ingredients/:searchTerm
 ```
 
 **Arguments**

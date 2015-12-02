@@ -2,7 +2,11 @@ import knex from 'knex';
 import bs from 'bookshelf';
 import dbConfig from '../../config/database.js';
 
-export default bs(knex({
+const bookshelf = bs(knex({
     client: 'pg',
     connection: dbConfig.connectionString
 }));
+
+bookshelf.plugin('registry');
+
+export default bookshelf;
