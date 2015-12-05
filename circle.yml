@@ -1,6 +1,6 @@
 machine:
     node:
-        version: 4.1.1
+        version: 4.2.3
 dependencies:
     pre:
         - sudo apt-get install build-essential
