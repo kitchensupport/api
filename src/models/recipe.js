@@ -48,11 +48,11 @@ const Model = bookshelf.Model.extend({
         });
     }
 }, {
-    getRecipe({id, yummlyId} = {}) {
+    getRecipe({id, yummly_id} = {}) {
         if (id) {
             return Model.where({id}).fetch({withRelated: 'userRecipes'});
         } else {
-            return Model.where({yummly_id: yummlyId}).fetch({withRelated: 'userRecipes'});
+            return Model.where({yummly_id}).fetch({withRelated: 'userRecipes'});
         }
     }
 });
