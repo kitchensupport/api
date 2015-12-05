@@ -71,7 +71,7 @@ const Collection = bookshelf.Collection.extend({
 }, {
     getRecipes({forceNew = false, searchTerm, offset = 0, limit = 30} = {}) {
         if (forceNew) {
-            const queryParams = {start: offset, maxRecipes: limit};
+            const queryParams = {start: offset, maxResult: limit};
 
             if (searchTerm) {
                 queryParams.q = searchTerm;
