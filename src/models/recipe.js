@@ -48,11 +48,11 @@ const Model = bookshelf.Model.extend({
         });
     }
 }, {
-    getRecipe({id, yummlyId} = {}) {
+    getRecipe({id, yummly_id} = {}) {
         if (id) {
             return Model.where({id}).fetch({withRelated: 'userRecipes'});
         } else {
-            return Model.where({yummly_id: yummlyId}).fetch({withRelated: 'userRecipes'});
+            return Model.where({yummly_id}).fetch({withRelated: 'userRecipes'});
         }
     }
 });
@@ -71,7 +71,7 @@ const Collection = bookshelf.Collection.extend({
 }, {
     getRecipes({forceNew = false, searchTerm, offset = 0, limit = 30} = {}) {
         if (forceNew) {
-            const queryParams = {start: offset, maxRecipes: limit};
+            const queryParams = {start: offset, maxResult: limit};
 
             if (searchTerm) {
                 queryParams.q = searchTerm;
