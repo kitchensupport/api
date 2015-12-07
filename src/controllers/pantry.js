@@ -38,7 +38,8 @@ pantry.get((req, res, next) => {
 pantry.post((req, res, next) => {
     PantryItem.upsert({
         userId: req.user.id,
-        ingredientId: req.body.ingredient_id
+        ingredientId: req.body.ingredient_id,
+        value: req.body.value === undefined ? true : req.body.value
     }).then(() => {
         res.status(200).send({
             status: 'success'

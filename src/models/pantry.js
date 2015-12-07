@@ -16,7 +16,7 @@ const Model = bookshelf.Model.extend({
         });
     }
 }, {
-    upsert({userId, ingredientId}) {
+    upsert({userId, ingredientId, value}) {
         const model = new Model({
             user_id: userId,
             ingredient_id: ingredientId
@@ -24,10 +24,10 @@ const Model = bookshelf.Model.extend({
 
         return model.fetch().then((item) => {
             if (item) {
-                return item.save({active: true}, {patch: true});
+                return item.save({active: value}, {patch: true});
             }
 
-            return model.save();
+            return model.save({active: value}, {patch: true});
         });
     }
 });
