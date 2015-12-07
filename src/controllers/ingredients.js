@@ -10,26 +10,7 @@ export function routes() {
 
 /* ********* route initialization ********* */
 
-router.get('/ingredients', (req, res, next) => {
-    const {limit, offset} = req.page;
-
-    Ingredients.getIngredients().then((ingredients) => {
-        res.status(200).send(ingredients.toJSON({
-            status: 'success',
-            limit,
-            offset
-        }));
-    }).catch((err) => {
-        res.status(403).send({
-            status: 'failure',
-            error: 'Unable to get ingredients'
-        });
-
-        next(err);
-    });
-});
-
-router.get('/ingredients/:search', (req, res, next) => {
+router.get('/ingredients/:search?', (req, res, next) => {
     const {limit, offset} = req.page;
 
     Ingredients.getIngredients({searchTerm: req.params.search}).then((ingredients) => {
@@ -41,7 +22,7 @@ router.get('/ingredients/:search', (req, res, next) => {
     }).catch((err) => {
         res.status(404).send({
             status: 'failure',
-            error: `No ingredients like ${req.params.search}`
+            error: `Unable to get ingredients${req.params.searchTerm ? ' like ' : ''}${req.params.searchTerm || ''}`
         });
 
         next(err);
