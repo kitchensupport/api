@@ -53,7 +53,7 @@ userrecipes.post((req, res, next) => {
         userId: req.user.id,
         recipeId: req.body.recipe_id,
         action: getConstraint(req.path),
-        value: true
+        value: req.body.value === undefined ? true : req.body.value
     }).then(() => {
         res.status(200).send({
             status: 'success'
